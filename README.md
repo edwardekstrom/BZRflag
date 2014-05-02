@@ -81,7 +81,6 @@ example shell script provided (example batch files are also included).
 
 Special git commands to remember
 
-creating conflit
 
 git pull origin master
 git push origin master
