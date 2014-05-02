@@ -79,10 +79,17 @@ example shell script provided (example batch files are also included).
 
 
 
+Special git commands to remember
 
 
 
+git pull origin master
+git push origin master
 
+git add <filename> ...
+git commit -m '<message>'
+
+git status
 
 
 
