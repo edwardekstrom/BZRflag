@@ -34,8 +34,8 @@ class Agent(object):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
-        myPF = PField(0, 0, 1, None);
-        myPF.mod()
+        myPF = PField();
+        myPF.motd()
 
 
     def tick(self, time_diff):

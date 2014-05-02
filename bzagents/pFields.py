@@ -2,7 +2,10 @@
 
 
 
-class PField(X, Y, direction, applyToObject):
+class PField():
 
-	def where(self):
-		return (self.X, self.Y)
+
+
+
+	def motd(self):
+		print "Message of the Day: I am a FIELD!!!"
