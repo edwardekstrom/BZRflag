@@ -22,7 +22,7 @@ class PField(object):
 			speed = 0
 		elif (dist >= r) and (dist <= s):
 			speed = float((r - s) / s) * float(1.0)
-		else
+		else:
 			speed = 1
 
 		#return speed and angle

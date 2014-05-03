@@ -76,12 +76,12 @@ class Agent(object):
 
             if final_angle == 0:
                 final_angle = angle
-            else
+            else:
                 final_angle = (final_angle + angle) / 2
 
             if final_speed == 0:
                 final_speed = speed
-            else
+            else:
                 final_speed = final_speed + speed / 2
 
         command = Command(tank.index, final_speed, 2 * final_angle, True)
