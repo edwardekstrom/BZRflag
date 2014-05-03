@@ -50,10 +50,27 @@ class Agent(object):
 
         self.commands = []
 
+        #for tank in mytanks:
+            #self.attack_enemies(tank)
+
         for tank in mytanks:
-            self.attack_enemies(tank)
+            self.run_to_flag(flag)
 
         results = self.bzrc.do_commands(self.commands)
+
+    def run_to_flag(self, tank):
+        best_flag = None
+        best_flag_dist = 2 * float(self.constants['worldsize'])
+        for f in self.flags:
+            dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
+            if dist < best_flag_dist:
+                best_flag_dist = dist
+                best_flag = f
+        if best_flag is None:
+            command = Command(tank.index, 0, 0, False)
+            self.commands.append(command)
+        else:
+            self.move_to_position(tank, best_flag.x, best_flag.y)
 
     def attack_enemies(self, tank):
         """Find the closest enemy and chase it, shooting as you go."""
