@@ -23,9 +23,11 @@
 import sys
 import math
 import time
+import random
 
 from bzrc import BZRC, Command
 from time import sleep
+
 
 class Agent(object):
     """Class handles all command and control logic for a teams tanks."""
@@ -55,7 +57,8 @@ class Agent(object):
         self.move_straight(tank2,tank2.x,tank2.y)
         self.move_straight(tank,tank.x,tank.y)
         t0 = time.time()
-        while ( (time.time() - t0) < 6):
+        rint = random.randint(3, 8)
+        while ( (time.time() - t0) < rint):
             results = self.bzrc.do_commands(self.commands)
         commands = []
 
