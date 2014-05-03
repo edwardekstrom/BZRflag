@@ -53,8 +53,15 @@ class Agent(object):
         # for every flag create a potential field and add it to a list
         for flg in flags:
             if flg.color != self.constants['team']:
-                pf = PField(flg.x, flg.y, 0, 3, 'attract')
+                pf = PField(flg.x, flg.y, 0, 50, 'attract')
                 self.potentialFields.append(pf)
+
+        obstacles = self.bzrc.get_obstacles()
+        print obstacles[0]
+        for o in obstacles:
+            #pfo = PField(o.x, o.y, 0, 75, 'repel')
+            #self.potentialFields.append(pfo)
+            pass
 
         for tank in mytanks:
             self.pf_move(tank)
@@ -70,6 +77,7 @@ class Agent(object):
     def pf_move(self, tank):
         final_angle = 0
         final_speed = 0
+
         for pf in self.potentialFields:
             speed, angle = pf.calc_vector(tank.x, tank.y)
             angle = self.normalize_angle(angle - tank.angle)
@@ -77,12 +85,14 @@ class Agent(object):
             if final_angle == 0:
                 final_angle = angle
             else:
-                final_angle = (final_angle + angle) / 2
+                final_angle = (float(final_angle) + float(angle)) / 2.0
 
             if final_speed == 0:
                 final_speed = speed
             else:
-                final_speed = final_speed + speed / 2
+                final_speed = (float(final_speed) + float(speed)) / 2.0
+
+        #print "%f\t%f" % (final_angle, final_speed)
 
         command = Command(tank.index, final_speed, 2 * final_angle, True)
         self.commands.append(command)
