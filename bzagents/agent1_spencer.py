@@ -34,8 +34,8 @@ class Agent(object):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
-        myPF = PField();
-        myPF.motd()
+        self.potentialFields = []
+        
 
 
     def tick(self, time_diff):
@@ -50,22 +50,53 @@ class Agent(object):
 
         self.commands = []
 
+        # for every flag create a potential field and add it to a list
+        for flg in flags:
+            if flg.color != self.constants['team']:
+                pf = PField(flg.x, flg.y, 0, 3, 'attract')
+                self.potentialFields.append(pf)
+
+        for tank in mytanks:
+            self.pf_move(tank)
+
         #for tank in mytanks:
             #self.attack_enemies(tank)
 
-        for tank in mytanks:
-            self.run_to_flag(flag)
+        #for tank in mytanks:
+            #self.run_to_flag(tank)
 
         results = self.bzrc.do_commands(self.commands)
+
+    def pf_move(self, tank):
+        final_angle = 0
+        final_speed = 0
+        for pf in self.potentialFields:
+            speed, angle = pf.calc_vector(tank.x, tank.y)
+            angle = self.normalize_angle(angle - tank.angle)
+
+            if final_angle == 0:
+                final_angle = angle
+            else
+                final_angle = (final_angle + angle) / 2
+
+            if final_speed == 0:
+                final_speed = speed
+            else
+                final_speed = final_speed + speed / 2
+
+        command = Command(tank.index, final_speed, 2 * final_angle, True)
+        self.commands.append(command)
+        
 
     def run_to_flag(self, tank):
         best_flag = None
         best_flag_dist = 2 * float(self.constants['worldsize'])
         for f in self.flags:
-            dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
-            if dist < best_flag_dist:
-                best_flag_dist = dist
-                best_flag = f
+            if f.color != self.constants['team']:
+                dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
+                if dist < best_flag_dist:
+                    best_flag_dist = dist
+                    best_flag = f
         if best_flag is None:
             command = Command(tank.index, 0, 0, False)
             self.commands.append(command)
@@ -94,6 +125,7 @@ class Agent(object):
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
+        # index, speed, angvel, shoot
         command = Command(tank.index, 1, 2 * relative_angle, True)
         self.commands.append(command)
 
