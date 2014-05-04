@@ -51,19 +51,27 @@ class Agent(object):
         self.commands = []
 
         # for every flag create a potential field and add it to a list
-        for flg in flags:
-            if flg.color != self.constants['team']:
-                pf = PField(flg.x, flg.y, 0, 50, 'attract')
-                self.potentialFields.append(pf)
+        #for flg in flags:
+            #if flg.color != self.constants['team']:
+                #pf = PField(flg.x, flg.y, 0, 50, 'attract')
+                #self.potentialFields.append(pf)
+
+
 
         obstacles = self.bzrc.get_obstacles()
-        print obstacles[0]
         for o in obstacles:
             #pfo = PField(o.x, o.y, 0, 75, 'repel')
             #self.potentialFields.append(pfo)
+            #print o
             pass
 
+        pfo = PField(0, 0, 0, 75, 'repel')
+        #self.potentialFields.append(pfo)
+
         for tank in mytanks:
+            best_flag = self.choose_best_flag(tank)
+            pf = PField(best_flag.x, best_flag.y, 0, 50, 'attract')
+            self.potentialFields.append(pf)
             self.pf_move(tank)
 
         #for tank in mytanks:
@@ -97,6 +105,19 @@ class Agent(object):
         command = Command(tank.index, final_speed, 2 * final_angle, True)
         self.commands.append(command)
         
+
+    def choose_best_flag(self, tank):
+        best_flag = None
+        best_flag_dist = 2 * float(self.constants['worldsize'])
+        for f in self.flags:
+            if f.color != self.constants['team']:
+                dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
+                if dist < best_flag_dist:
+                    best_flag_dist = dist
+                    best_flag = f
+
+        return best_flag
+
 
     def run_to_flag(self, tank):
         best_flag = None
