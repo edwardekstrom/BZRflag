@@ -102,7 +102,7 @@ class Agent(object):
 
         #print "%f\t%f" % (final_angle, final_speed)
 
-        command = Command(tank.index, final_speed, 2 * final_angle, True)
+        command = Command(tank.index, final_speed, 2 * final_angle, False)
         self.commands.append(command)
         
 
@@ -110,13 +110,16 @@ class Agent(object):
         best_flag = None
         best_flag_dist = 2 * float(self.constants['worldsize'])
         for f in self.flags:
+            # print str(len(self.flags))
             if f.color != self.constants['team']:
                 dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
                 if dist < best_flag_dist:
                     best_flag_dist = dist
                     best_flag = f
-
-        return best_flag
+        if best_flag is None:
+            return self.flags[0]
+        else:
+            return best_flag
 
 
     def run_to_flag(self, tank):
@@ -157,7 +160,7 @@ class Agent(object):
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
         # index, speed, angvel, shoot
-        command = Command(tank.index, 1, 2 * relative_angle, True)
+        command = Command(tank.index, 1, 2 * relative_angle, False)
         self.commands.append(command)
 
     def normalize_angle(self, angle):
