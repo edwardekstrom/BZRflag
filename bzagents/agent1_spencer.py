@@ -70,6 +70,11 @@ class Agent(object):
 
         for tank in mytanks:
             best_flag = self.choose_best_flag(tank)
+            if ((best_flag.x == tank.x) and (best_flag.y == tank.y)):
+                for f in self.flags:
+                    if f.color == self.constants['team']:
+                        print 'I have the' + f.color + ' flag.'
+                        best_flag = f
             pf = PField(best_flag.x, best_flag.y, 0, 50, 'attract')
             self.potentialFields.append(pf)
             self.pf_move(tank)
@@ -96,13 +101,14 @@ class Agent(object):
                 final_angle = (float(final_angle) + float(angle)) / 2.0
 
             if final_speed == 0:
-                final_speed = speed
+                final_speed = speed / 2.0
             else:
-                final_speed = (float(final_speed) + float(speed)) / 2.0
+                final_speed = (float(final_speed) + float(speed))
+        # final_angle = final_angle/float(len(self.potentialFields))
 
         #print "%f\t%f" % (final_angle, final_speed)
 
-        command = Command(tank.index, final_speed, 2 * final_angle, False)
+        command = Command(tank.index, final_speed, 2 * final_angle, True)
         self.commands.append(command)
         
 
