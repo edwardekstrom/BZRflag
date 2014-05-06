@@ -5,6 +5,7 @@ intentionally avoided "giving it all away."
 
 from __future__ import division
 from itertools import cycle
+from time import sleep
 
 try:
     from numpy import linspace
@@ -36,6 +37,20 @@ except ImportError:
             return y
 
 
+try:
+    from bzrc import BZRC, Command
+except ImportError:
+    print "could not find bzrc."
+    import sys
+    sys.exit(-1)
+
+try:
+    from pFields import PField
+except ImportError:
+    print "could not find pFields."
+    import sys
+    sys.exit(-1)
+    
 ########################################################################
 # Constants
 
@@ -53,6 +68,15 @@ ANIMATION_MIN = 0
 ANIMATION_MAX = 500
 ANIMATION_FRAMES = 50
 
+BZRC = BZRC('localhost', 50103)
+print 'got here'
+sleep(2)
+print 'done sleeping'
+mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
+f = flags[3]
+print f.color
+print 'flag x = ' + str(f.x)
+print 'flag y = ' + str(f.y)
 
 ########################################################################
 # Field and Obstacle Definitions
@@ -64,7 +88,8 @@ def generate_field_function(scale):
         if sqnorm == 0.0:
             return 0, 0
         else:
-            return x*scale/sqnorm, y*scale/sqnorm
+            # print str(f.x)
+            return f.x*scale, f.y*scale
     return function
 
 OBSTACLES = [((0, 0), (-150, 0), (-150, -50), (0, -50)),
@@ -130,6 +155,8 @@ def plot_field(function):
 
     for x, y in points:
         f_x, f_y = function(x, y)
+        # print 'f(x) = ' + str(f_x)
+        # print 'f(y) = ' + str(f_y)
         plotvalues = gpi_point(x, y, f_x, f_y)
         if plotvalues is not None:
             x1, y1, x2, y2 = plotvalues
