@@ -73,7 +73,7 @@ print 'got here'
 sleep(2)
 print 'done sleeping'
 mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
-f = flags[3]
+f = flags[2]
 print f.color
 print 'flag x = ' + str(f.x)
 print 'flag y = ' + str(f.y)
@@ -89,7 +89,7 @@ def generate_field_function(scale):
             return 0, 0
         else:
             # print str(f.x)
-            return f.x*scale, f.y*scale
+            return f.x, f.y
     return function
 
 OBSTACLES = [((0, 0), (-150, 0), (-150, -50), (0, -50)),
