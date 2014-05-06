@@ -56,7 +56,7 @@ class Agent(object):
                 #pf = PField(flg.x, flg.y, 0, 50, 'attract')
                 #self.potentialFields.append(pf)
 
-
+        del self.potentialFields[:]
 
         obstacles = self.bzrc.get_obstacles()
         for o in obstacles:
@@ -65,18 +65,11 @@ class Agent(object):
             #print o
             pass
 
-        pfo = PField(0, 0, 0, 75, 'repel')
+        #pfo = PField(0, 0, 0, 75, 'repel')
         #self.potentialFields.append(pfo)
 
         for tank in mytanks:
-            best_flag = self.choose_best_flag(tank)
-            if ((best_flag.x == tank.x) and (best_flag.y == tank.y)):
-                for f in self.flags:
-                    if f.color == self.constants['team']:
-                        print 'I have the' + f.color + ' flag.'
-                        best_flag = f
-            pf = PField(best_flag.x, best_flag.y, 0, 50, 'attract')
-            self.potentialFields.append(pf)
+            
             self.pf_move(tank)
 
         #for tank in mytanks:
@@ -111,6 +104,14 @@ class Agent(object):
         command = Command(tank.index, final_speed, 2 * final_angle, True)
         self.commands.append(command)
         
+
+    def find_home_base(self, tank):
+        bases = self.bzrc.get_bases()
+        for base in bases:
+            #print base
+            if base.color == self.constants['team']:
+                #print "going to " + base.color + " base %f,%f" % (base.corner1_x, base.corner1_y)
+                return (base.corner1_x, base.corner1_y)
 
     def choose_best_flag(self, tank):
         best_flag = None
