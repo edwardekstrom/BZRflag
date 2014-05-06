@@ -75,6 +75,7 @@ class Agent(object):
                 pf = PField(best_flag.x, best_flag.y, 0, self.flag_sphere, 'attract')
             # if not possessed, then put a pf on a flag
             else:
+                # which is closer ? home_base or obstacle
                 home_base_x, home_base_y = self.find_home_base(tank)
                 pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
             self.pf_move(tank, pf)
