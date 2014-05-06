@@ -35,6 +35,7 @@ class Agent(object):
         self.constants = self.bzrc.get_constants()
         self.commands = []
         self.potentialFields = []
+        self.flag_sphere = 20
         
 
 
@@ -56,8 +57,6 @@ class Agent(object):
                 #pf = PField(flg.x, flg.y, 0, 50, 'attract')
                 #self.potentialFields.append(pf)
 
-        del self.potentialFields[:]
-
         obstacles = self.bzrc.get_obstacles()
         for o in obstacles:
             #pfo = PField(o.x, o.y, 0, 75, 'repel')
@@ -69,8 +68,16 @@ class Agent(object):
         #self.potentialFields.append(pfo)
 
         for tank in mytanks:
-            
-            self.pf_move(tank)
+            #print tank.flag
+            # if flag possession, then put a pf on the home_base
+            if(tank.flag == '-'):
+                best_flag = self.choose_best_flag(tank)
+                pf = PField(best_flag.x, best_flag.y, 0, self.flag_sphere, 'attract')
+            # if not possessed, then put a pf on a flag
+            else:
+                home_base_x, home_base_y = self.find_home_base(tank)
+                pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
+            self.pf_move(tank, pf)
 
         #for tank in mytanks:
             #self.attack_enemies(tank)
@@ -80,37 +87,32 @@ class Agent(object):
 
         results = self.bzrc.do_commands(self.commands)
 
-    def pf_move(self, tank):
+    def pf_move(self, tank, pf):
         final_angle = 0
-        final_speed = 0
 
-        for pf in self.potentialFields:
-            speed, angle = pf.calc_vector(tank.x, tank.y)
-            angle = self.normalize_angle(angle - tank.angle)
+        speed, angle = pf.calc_vector(tank.x, tank.y)
+        angle = self.normalize_angle(angle - tank.angle)
 
-            if final_angle == 0:
-                final_angle = angle
-            else:
-                final_angle = (float(final_angle) + float(angle)) / 2.0
+        # redo this code
 
-            if final_speed == 0:
-                final_speed = speed / 2.0
-            else:
-                final_speed = (float(final_speed) + float(speed))
+        if final_angle == 0:
+            final_angle = angle
+        else:
+            final_angle = (float(final_angle) + float(angle)) / 2.0
+
+        
         # final_angle = final_angle/float(len(self.potentialFields))
 
         #print "%f\t%f" % (final_angle, final_speed)
 
-        command = Command(tank.index, final_speed, 2 * final_angle, True)
+        command = Command(tank.index, speed, 2 * final_angle, True)
         self.commands.append(command)
         
 
     def find_home_base(self, tank):
         bases = self.bzrc.get_bases()
         for base in bases:
-            #print base
             if base.color == self.constants['team']:
-                #print "going to " + base.color + " base %f,%f" % (base.corner1_x, base.corner1_y)
                 return (base.corner1_x, base.corner1_y)
 
     def choose_best_flag(self, tank):
