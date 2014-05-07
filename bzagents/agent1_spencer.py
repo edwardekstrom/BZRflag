@@ -35,7 +35,16 @@ class Agent(object):
         self.constants = self.bzrc.get_constants()
         self.commands = []
         self.potentialFields = []
-        self.flag_sphere = 20
+        self.flag_sphere = 25
+        self.obstacle_sphere = 25
+
+        obstacles = self.bzrc.get_obstacles()
+        print ""
+        for o in obstacles:
+            #pfo = PField(o.x, o.y, 0, 75, 'repel')
+            #self.potentialFields.append(pfo)
+            print o
+            
         
 
 
@@ -52,23 +61,15 @@ class Agent(object):
         self.commands = []
 
         # for every flag create a potential field and add it to a list
-        #for flg in flags:
-            #if flg.color != self.constants['team']:
-                #pf = PField(flg.x, flg.y, 0, 50, 'attract')
-                #self.potentialFields.append(pf)
-
-        obstacles = self.bzrc.get_obstacles()
-        for o in obstacles:
-            #pfo = PField(o.x, o.y, 0, 75, 'repel')
-            #self.potentialFields.append(pfo)
-            #print o
-            pass
-
-        #pfo = PField(0, 0, 0, 75, 'repel')
-        #self.potentialFields.append(pfo)
 
         for tank in mytanks:
-            #print tank.flag
+            # find closest obstacle point
+            obstacle_x, obstacle_y, d = self.closest_obstacle(tank)
+            if d < self.obstacle_sphere:
+                pfo = PField(obstacle_x, obstacle_y, 0, self.obstacle_sphere, 'repel')
+            else:
+                pfo = None
+
             # if flag possession, then put a pf on the home_base
             if(tank.flag == '-'):
                 best_flag = self.choose_best_flag(tank)
@@ -77,43 +78,54 @@ class Agent(object):
             else:
                 home_base_x, home_base_y = self.find_home_base(tank)
                 pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
-            self.pf_move(tank, pf)
+            #self.pf_move(tank, pf, pfo)
+            self.pf_move(tank, pf, None)
 
         #for tank in mytanks:
             #self.attack_enemies(tank)
 
-        #for tank in mytanks:
-            #self.run_to_flag(tank)
-
         results = self.bzrc.do_commands(self.commands)
 
-    def pf_move(self, tank, pf):
-        final_angle = 0
+    def dist(self, x1, y1, x2, y2):
+        return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
-        speed, angle = pf.calc_vector(tank.x, tank.y)
+    def pf_move(self, tank, pf, pfo):
+        if pfo != None:
+            speed, angle = pfo.calc_vector(tank.x, tank.y)
+        else:
+            speed, angle = pf.calc_vector(tank.x, tank.y)
         angle = self.normalize_angle(angle - tank.angle)
 
         # redo this code
 
-        if final_angle == 0:
-            final_angle = angle
-        else:
-            final_angle = (float(final_angle) + float(angle)) / 2.0
-
-        
-        # final_angle = final_angle/float(len(self.potentialFields))
-
-        #print "%f\t%f" % (final_angle, final_speed)
-
-        command = Command(tank.index, speed, 2 * final_angle, True)
+        command = Command(tank.index, speed, 2 * angle, True)
         self.commands.append(command)
         
+    def closest_obstacle(self, tank):
+        closest_x = 2 * float(self.constants['worldsize'])
+        closest_y = 2 * float(self.constants['worldsize'])
+        best_d = 2 * float(self.constants['worldsize'])
+
+        obstacles = self.bzrc.get_obstacles()
+        for o in obstacles:
+            for corner in o:
+                d = self.dist(corner[0], corner[1], tank.x, tank.y)
+                if d < best_d:
+                    best_d = d
+                    closest_x = corner[0]
+                    closest_y = corner[1]
+
+        return (closest_x, closest_y, best_d)
 
     def find_home_base(self, tank):
         bases = self.bzrc.get_bases()
         for base in bases:
             if base.color == self.constants['team']:
-                return (base.corner1_x, base.corner1_y)
+                xdist = abs(base.corner1_x - base.corner3_x) / 2.0
+                ydist = abs(base.corner1_y - base.corner3_y) / 2.0
+                base_x = max(base.corner1_x, base.corner3_x) - (xdist/2.0)
+                base_y = max(base.corner1_y, base.corner3_y) - (ydist/2.0)
+                return (base_x, base_y)
 
     def choose_best_flag(self, tank):
         best_flag = None
@@ -121,30 +133,15 @@ class Agent(object):
         for f in self.flags:
             # print str(len(self.flags))
             if f.color != self.constants['team']:
-                dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
-                if dist < best_flag_dist:
-                    best_flag_dist = dist
+                #d = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
+                d = self.dist(f.x, f.y, tank.x, tank.y)
+                if d < best_flag_dist:
+                    best_flag_dist = d
                     best_flag = f
         if best_flag is None:
             return self.flags[0]
         else:
             return best_flag
-
-
-    def run_to_flag(self, tank):
-        best_flag = None
-        best_flag_dist = 2 * float(self.constants['worldsize'])
-        for f in self.flags:
-            if f.color != self.constants['team']:
-                dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
-                if dist < best_flag_dist:
-                    best_flag_dist = dist
-                    best_flag = f
-        if best_flag is None:
-            command = Command(tank.index, 0, 0, False)
-            self.commands.append(command)
-        else:
-            self.move_to_position(tank, best_flag.x, best_flag.y)
 
     def attack_enemies(self, tank):
         """Find the closest enemy and chase it, shooting as you go."""

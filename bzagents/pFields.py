@@ -18,28 +18,19 @@ class PField(object):
 
 		# find the angle
 		angle = 0.0
+		speed = 1.0
 		if self.direction == 'attract':
 			angle = math.atan2(self.y - tank_y, self.x - tank_x)
 		elif self.direction == 'repel':
 			angle = -math.atan2(self.y - tank_y, self.x - tank_x)
 
+		if dist < self.r:
+			speed = 0
+		elif (dist >= self.r) and (dist <= self.s):
+			speed = float(dist - self.r) / float(self.s - self.r)
+		else:
+			speed = 1
 
-		# find the speed for attraction/repelling
-		speed = 0.0
-		if self.direction == 'attract':
-			if dist < self.r:
-				speed = 0
-			elif (dist >= self.r) and (dist <= self.s):
-				speed = float(dist - self.r) / float(self.s - self.r)
-			else:
-				speed = 1
-		elif self.direction == 'repel':
-			if dist < self.r:
-				speed = 1
-			elif (dist >= self.r) and (dist <= self.s):
-				speed = 1.0 - (float(dist - self.r) / float(self.s - self.r))
-			else:
-				speed = 0
 
 		#return speed and angle
 		return (speed, angle)
