@@ -71,14 +71,14 @@ ANIMATION_FRAMES = 50
 FLAG_INT = 0
 
 BZRC = BZRC('localhost', 50103)
-print 'got here'
+# print 'got here'
 time.sleep(2)
-print 'done sleeping'
+# print 'done sleeping'
 mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
 f = flags[FLAG_INT]
-print f.color
-print 'flag x = ' + str(f.x)
-print 'flag y = ' + str(f.y)
+# print f.color
+# print 'flag x = ' + str(f.x)
+# print 'flag y = ' + str(f.y)
 
 ########################################################################
 # Field and Obstacle Definitions
