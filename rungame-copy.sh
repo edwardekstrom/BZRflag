@@ -2,7 +2,7 @@
 sleep 2
 python bzagents/agent1_spencer.py localhost 50100 &
 #ython bzagents/fields.py &
-python bzagents/agent1_spencer.py localhost 50101 &
-python bzagents/agent1_spencer.py localhost 50102 &
-python bzagents/agent1_spencer.py localhost 50103 &
+# python bzagents/agent1_spencer.py localhost 50101 &
+# python bzagents/agent1_spencer.py localhost 50102 &
+# python bzagents/agent1_spencer.py localhost 50103 &
 
