@@ -69,13 +69,18 @@ ANIMATION_MIN = 0
 ANIMATION_MAX = 500
 ANIMATION_FRAMES = 50
 FLAG_INT = 0
+OTHER_TANK = 20
 
 BZRC = BZRC('localhost', 50103)
 # print 'got here'
 time.sleep(2)
 # print 'done sleeping'
 mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
-f = flags[FLAG_INT]
+f = othertanks[OTHER_TANK]
+# commands = []
+# command = Command(FLAG_INT, 1,.5, False)
+# commands.append(command)
+# results = BZRC.do_commands(commands)
 # print f.color
 # print 'flag x = ' + str(f.x)
 # print 'flag y = ' + str(f.y)
@@ -91,13 +96,14 @@ def generate_field_function(scale):
             return 0, 0
         else:
             # print str(f.x)
-            return f.x - x, f.y - y
+            return x - f.x, y - f.y
     return function
 
 # OBSTACLES = [ ((0, 0), (-150, 0), (-150, -50), (0, -50)),
 #               ((200, 100), (200, 330), (300, 330), (300, 100))
 #             ]
 OBSTACLES = []
+
 
 ########################################################################
 # Helper Functions
@@ -110,12 +116,9 @@ def gpi_point(x, y, vec_x, vec_y):
     if r > 1:
         vec_x /= r
         vec_y /= r
-    else:
-        if r > 0:
-            vec_x /= r **2
-            vec_y /= r **2
-            vec_x /= r **2
-            vec_x /= r **2
+
+    if r > 100:
+        return None
     return (x - vec_x * VEC_LEN / 2, y - vec_y * VEC_LEN / 2,
             vec_x * VEC_LEN, vec_y * VEC_LEN)
 
@@ -221,7 +224,7 @@ for scale in cycle(anim_points):
     #     lastTime = time.time()
     time.sleep(.3)
     mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
-    f = flags[FLAG_INT]
+    f = othertanks[OTHER_TANK]
     # print 'hello world'
     field_function = generate_field_function(scale)
     gp.write(plot_field(field_function))
