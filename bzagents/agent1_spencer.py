@@ -113,14 +113,18 @@ class Agent(object):
         bases = self.bzrc.get_bases()
         for base in bases:
             if base.color == self.constants['team']:
-                return (base.corner1_x, base.corner1_y)
+                xdist = abs(base.corner1_x - base.corner3_x) / 2.0
+                ydist = abs(base.corner1_y - base.corner3_y) / 2.0
+                base_x = max(base.corner1_x, base.corner3_x) - (xdist/2.0)
+                base_y = max(base.corner1_y, base.corner3_y) - (ydist/2.0)
+                return (base_x, base_y)
 
     def choose_best_flag(self, tank):
         best_flag = None
         best_flag_dist = 2 * float(self.constants['worldsize'])
         for f in self.flags:
             # print str(len(self.flags))
-            if f.color != self.constants['team']:
+            if f.color != self.constants['team'] and f.poss_color != self.constants['team']:
                 dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
                 if dist < best_flag_dist:
                     best_flag_dist = dist
