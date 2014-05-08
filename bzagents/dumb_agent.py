@@ -51,19 +51,19 @@ class Agent(object):
 
         # for tank in mytanks:
         #     self.attack_enemies(tank)
-        self.attack_enemies(mytanks[0], mytanks[1])
+        self.attack_enemies(mytanks)
 
-    def attack_enemies(self, tank, tank2):
-        self.move_straight(tank2,tank2.x,tank2.y)
-        self.move_straight(tank,tank.x,tank.y)
+    def attack_enemies(self, tanks):
+        for tank in tanks:
+            self.move_straight(tank,tank.x,tank.y)
         t0 = time.time()
         rint = random.randint(3, 8)
         while ( (time.time() - t0) < rint):
             results = self.bzrc.do_commands(self.commands)
         commands = []
 
-        self.move_to_position(tank, tank.x, tank.y)
-        self.move_to_position(tank2, tank2.x, tank2.y)
+        for tank in tanks:
+            self.move_to_position(tank, tank.x, tank.y)
         t0 = time.time()
         while ( (time.time() - t0) < 1.8):
             results = self.bzrc.do_commands(self.commands)
