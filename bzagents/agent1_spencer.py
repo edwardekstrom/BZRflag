@@ -79,8 +79,8 @@ class Agent(object):
             else:
                 home_base_x, home_base_y = self.find_home_base(tank)
                 pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
-            #self.pf_move(tank, pf, pfo)
-            self.pf_move(tank, pf, None)
+            self.pf_move(tank, pf, pfo)
+            #self.pf_move(tank, pf, None)
 
         #for tank in mytanks:
             #self.attack_enemies(tank)

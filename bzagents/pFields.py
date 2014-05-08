@@ -18,7 +18,7 @@ class PField(object):
 
 		# find the angle
 		angle = 0.0
-		speed = 1.0
+		speed = 0.0
 		if self.direction == 'attract':
 			angle = math.atan2(self.y - tank_y, self.x - tank_x)
 		elif self.direction == 'repel':
