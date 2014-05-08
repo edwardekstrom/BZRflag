@@ -5,7 +5,8 @@ intentionally avoided "giving it all away."
 
 from __future__ import division
 from itertools import cycle
-from time import sleep
+import time
+import sys
 
 try:
     from numpy import linspace
@@ -67,16 +68,17 @@ VEC_LEN = 0.75 * WORLDSIZE / SAMPLES
 ANIMATION_MIN = 0
 ANIMATION_MAX = 500
 ANIMATION_FRAMES = 50
+FLAG_INT = 0
 
 BZRC = BZRC('localhost', 50103)
-print 'got here'
-sleep(2)
-print 'done sleeping'
+# print 'got here'
+time.sleep(2)
+# print 'done sleeping'
 mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
-f = flags[2]
-print f.color
-print 'flag x = ' + str(f.x)
-print 'flag y = ' + str(f.y)
+f = flags[FLAG_INT]
+# print f.color
+# print 'flag x = ' + str(f.x)
+# print 'flag y = ' + str(f.y)
 
 ########################################################################
 # Field and Obstacle Definitions
@@ -89,12 +91,13 @@ def generate_field_function(scale):
             return 0, 0
         else:
             # print str(f.x)
-            return f.x, f.y
+            return f.x - x, f.y - y
     return function
 
-OBSTACLES = [((0, 0), (-150, 0), (-150, -50), (0, -50)),
-                ((200, 100), (200, 330), (300, 330), (300, 100))]
-
+# OBSTACLES = [ ((0, 0), (-150, 0), (-150, -50), (0, -50)),
+#               ((200, 100), (200, 330), (300, 330), (300, 100))
+#             ]
+OBSTACLES = []
 
 ########################################################################
 # Helper Functions
@@ -107,6 +110,12 @@ def gpi_point(x, y, vec_x, vec_y):
     if r > 1:
         vec_x /= r
         vec_y /= r
+    else:
+        if r > 0:
+            vec_x /= r **2
+            vec_y /= r **2
+            vec_x /= r **2
+            vec_x /= r **2
     return (x - vec_x * VEC_LEN / 2, y - vec_y * VEC_LEN / 2,
             vec_x * VEC_LEN, vec_y * VEC_LEN)
 
@@ -155,12 +164,14 @@ def plot_field(function):
 
     for x, y in points:
         f_x, f_y = function(x, y)
-        # print 'f(x) = ' + str(f_x)
-        # print 'f(y) = ' + str(f_y)
+        # if countG == 0:
+        # print 'f(y) = f(' + str(y) + ") = " + str(f_y)
+        # print 'f(x) = f(' + str(x) + ") = " + str(f_x)
         plotvalues = gpi_point(x, y, f_x, f_y)
         if plotvalues is not None:
             x1, y1, x2, y2 = plotvalues
             s += '%s %s %s %s\n' % (x1, y1, x2, y2)
+    # countG += 1
     s += 'e\n'
     return s
 
@@ -184,15 +195,34 @@ except ImportError:
     print "Sorry.  You don't have the Gnuplot module installed."
     import sys
     sys.exit(-1)
+try:
+    execname, flagColor = sys.argv
+except ValueError:
+    execname = sys.argv[0]
+    print >>sys.stderr, '%s: incorrect number of arguments' % execname
+    print >>sys.stderr, 'usage: %s hostname port' % sys.argv[0]
+    sys.exit(-1)
+x = 0
+for f in flags:
+    if f.color == flagColor:
+        FLAG_INT = x
+    x += 1
 
 forward_list = list(linspace(ANIMATION_MIN, ANIMATION_MAX, ANIMATION_FRAMES/2))
 backward_list = list(linspace(ANIMATION_MAX, ANIMATION_MIN, ANIMATION_FRAMES/2))
 anim_points = forward_list + backward_list
-
+lastTime = time.time()
 gp = GnuplotProcess(persist=False)
 gp.write(gnuplot_header(-WORLDSIZE / 2, WORLDSIZE / 2))
 gp.write(draw_obstacles(OBSTACLES))
 for scale in cycle(anim_points):
+    # if ((time.time() - lastTime) > 1):
+    #     print 'hello world'
+    #     lastTime = time.time()
+    time.sleep(.3)
+    mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
+    f = flags[FLAG_INT]
+    # print 'hello world'
     field_function = generate_field_function(scale)
     gp.write(plot_field(field_function))
 
