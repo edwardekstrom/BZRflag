@@ -1,6 +1,7 @@
 #!/usr/bin/python -tt
 
 import math
+import random
 
 class PField(object):
 
@@ -20,26 +21,35 @@ class PField(object):
 		angle = 0.0
 		if self.direction == 'attract':
 			angle = math.atan2(self.y - tank_y, self.x - tank_x)
+
 		elif self.direction == 'repel':
-			angle = -math.atan2(self.y - tank_y, self.x - tank_x)
+			if dist < self.s:
+				r_int = random.randint(1, 100)
+				if(r_int < 50):
+					angle = math.atan2(self.y - tank_y, self.x - tank_x) - (math.pi / 8.0)
+				else:
+					angle = math.atan2(self.y - tank_y, self.x - tank_x) + (math.pi / 8.0)
+
+		elif self.direction == 'tangent':
+			if dist < self.s:
+				angle = math.atan2(self.y - tank_y, self.x - tank_x) + ((5 * math.pi) / 9.0)
+			else:
+				angle = math.atan2(self.y - tank_y, self.x - tank_x)
 
 
 		# find the speed for attraction/repelling
-		speed = 0.0
+		speedmod = 1.0
 		if self.direction == 'attract':
+			# inside radius
 			if dist < self.r:
-				speed = 0
+				speedmod = 0.0
+			# inside sphere
 			elif (dist >= self.r) and (dist <= self.s):
-				speed = float(dist - self.r) / float(self.s - self.r)
+				speedmod = float(dist - self.r) / float(self.s - self.r)
 			else:
-				speed = 1
-		elif self.direction == 'repel':
-			if dist < self.r:
-				speed = 1
-			elif (dist >= self.r) and (dist <= self.s):
-				speed = 1.0 - (float(dist - self.r) / float(self.s - self.r))
-			else:
-				speed = 0
+				speedmod = 1.0
+		#elif self.direction == 'repel':
+			
 
 		#return speed and angle
-		return (speed, angle)
+		return (speedmod, angle)
