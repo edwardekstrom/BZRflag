@@ -36,7 +36,7 @@ class Agent(object):
         self.commands = []
         self.potentialFields = []
         self.flag_sphere = 20
-        self.obstacle_sphere = 0
+        self.obstacle_sphere = 10
         self.enemy_sphere = 10
 
         print ""
@@ -60,26 +60,27 @@ class Agent(object):
 
 
         for tank in mytanks:
-            pfo = None
-            # obstacle_x, obstacle_y, d = self.closest_obstacle(tank)
-            # if d < self.obstacle_sphere:
-            #     pfo = PField(obstacle_x, obstacle_y, 0, self.obstacle_sphere, 'tangent')
-            
+            if tank.status != 'dead':
+                pfo = None
+                # obstacle_x, obstacle_y, d = self.closest_obstacle(tank)
+                # if d < self.obstacle_sphere:
+                #     pfo = PField(obstacle_x, obstacle_y, 0, self.obstacle_sphere, 'tangent')
 
-            pfe = None
-            enemy_x, enemy_y, enemy_dist = self.closest_enemy(tank, self.enemies)
-            if enemy_dist < self.enemy_sphere:
-                pfe = PField(enemy_x, enemy_y, 0, self.enemy_sphere, 'repel')
+                pfe = None
+                enemy_x, enemy_y, enemy_dist = self.closest_enemy(tank, self.enemies)
+                if enemy_dist < self.enemy_sphere:
+                    pfe = PField(enemy_x, enemy_y, 0, self.enemy_sphere, 'repel')
 
-            # if flag possession, then put a pf on the home_base
-            if(tank.flag == '-'):
-                best_flag = self.choose_best_flag(tank)
-                pf = PField(best_flag.x, best_flag.y, 0, self.flag_sphere, 'attract')
-            # if not possessed, then put a pf on a flag
-            else:
-                home_base_x, home_base_y = self.find_home_base(tank)
-                pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
-            self.pf_move(tank, pf, pfo, pfe)
+                # if flag possession, then put a pf on the home_base
+                pf = None
+                if(tank.flag == '-'):
+                    best_flag = self.choose_best_flag(tank)
+                    pf = PField(best_flag.x, best_flag.y, 0, self.flag_sphere, 'attract')
+                # if not possessed, then put a pf on a flag
+                else:
+                    home_base_x, home_base_y = self.find_home_base(tank)
+                    pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
+                self.pf_move(tank, pf, pfo, pfe)
 
         #for tank in mytanks:
             #self.attack_enemies(tank)
@@ -92,12 +93,15 @@ class Agent(object):
     def pf_move(self, tank, pf, pfo, pfe):
         final_angle = 0
 
-        if pfo == None and pfe == None:
-            speedmod, angle = pf.calc_vector(tank.x, tank.y)
-        elif pfe == None:
+        if pfo != None:
+            #print self.constants['team'] + " tank: %d = pfo" % tank.index
             speedmod, angle = pfo.calc_vector(tank.x, tank.y)
-        else:
+        elif pfe != None:
+            #print self.constants['team'] + " tank: %d = pfe" % tank.index
             speedmod, angle = pfe.calc_vector(tank.x, tank.y)
+        else:
+            #print self.constants['team'] + " tank: %d = pf" % tank.index
+            speedmod, angle = pf.calc_vector(tank.x, tank.y)
         
 
         angle = self.normalize_angle(angle - tank.angle)
@@ -146,7 +150,7 @@ class Agent(object):
         return (closest_x, closest_y, best_d)
 
     def dist(self, x1, y1, x2, y2):
-        return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
+        return math.sqrt(float((x1 - x2)**2) + float((y1 - y2)**2))
 
     def find_home_base(self, tank):
         bases = self.bzrc.get_bases()
