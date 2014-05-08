@@ -15,7 +15,7 @@ class PField(object):
 
 	def calc_vector(self, tank_x, tank_y):
 		# find the distance
-		dist = math.sqrt((self.x - tank_x)**2 + (self.y - tank_y)**2)
+		dist = (self.x - tank_x)**2 + (self.y - tank_y)**2
 
 		# find the angle
 		angle = 0.0
@@ -23,18 +23,14 @@ class PField(object):
 			angle = math.atan2(self.y - tank_y, self.x - tank_x)
 
 		elif self.direction == 'repel':
-			if dist < self.s:
-				r_int = random.randint(1, 100)
-				if(r_int < 50):
-					angle = math.atan2(self.y - tank_y, self.x - tank_x) - (math.pi / 8.0)
-				else:
-					angle = math.atan2(self.y - tank_y, self.x - tank_x) + (math.pi / 8.0)
+			# if dist < self.s:
+			angle = math.atan2(tank_y - self.y, tank_x - self.x)
 
 		elif self.direction == 'tangent':
-			if dist < self.s:
-				angle = math.atan2(self.y - tank_y, self.x - tank_x) + ((5 * math.pi) / 9.0)
-			else:
-				angle = math.atan2(self.y - tank_y, self.x - tank_x)
+			# print dist
+			# print str(dist) + ' , ' + str(self.s)
+			# if dist < self.s:
+			angle = math.atan2(math.cos(self.x - tank_x), -math.sin(self.y - tank_y))
 
 
 		# find the speed for attraction/repelling

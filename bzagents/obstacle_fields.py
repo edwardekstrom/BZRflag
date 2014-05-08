@@ -7,6 +7,7 @@ from __future__ import division
 from itertools import cycle
 import time
 import sys
+import math
 
 try:
     from numpy import linspace
@@ -71,7 +72,7 @@ ANIMATION_FRAMES = 50
 FLAG_INT = 0
 OTHER_TANK = 20
 
-BZRC = BZRC('localhost', 50102)
+BZRC = BZRC('localhost', 50101)
 # print 'got here'
 time.sleep(2)
 # print 'done sleeping'
@@ -96,7 +97,7 @@ def generate_field_function(scale):
             return 0, 0
         else:
             # print str(f.x)
-            return x - f.x, y - f.y
+            return math.cos(y - f.y), -math.sin(x - f.x)
     return function
 
 # OBSTACLES = [ ((0, 0), (-150, 0), (-150, -50), (0, -50)),
@@ -171,6 +172,8 @@ def plot_field(function):
         # print 'f(y) = f(' + str(y) + ") = " + str(f_y)
         # print 'f(x) = f(' + str(x) + ") = " + str(f_x)
         plotvalues = gpi_point(x, y, f_x, f_y)
+        if( ( (x-f.x) ** 2 + (y - f.y) ** 2) ** .5 > 100 ):
+            plotvalues = None
         if plotvalues is not None:
             x1, y1, x2, y2 = plotvalues
             s += '%s %s %s %s\n' % (x1, y1, x2, y2)
@@ -224,7 +227,7 @@ for scale in cycle(anim_points):
     #     lastTime = time.time()
     time.sleep(.3)
     mytanks, othertanks, flags, shots = BZRC.get_lots_o_stuff()
-    f = othertanks[OTHER_TANK]
+    f = flags[FLAG_INT]
     # print 'hello world'
     field_function = generate_field_function(scale)
     gp.write(plot_field(field_function))
