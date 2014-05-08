@@ -68,6 +68,7 @@ VEC_LEN = 0.75 * WORLDSIZE / SAMPLES
 ANIMATION_MIN = 0
 ANIMATION_MAX = 500
 ANIMATION_FRAMES = 50
+FLAG_INT = 0
 
 BZRC = BZRC('localhost', 50103)
 print 'got here'
@@ -195,11 +196,11 @@ except ValueError:
     print >>sys.stderr, '%s: incorrect number of arguments' % execname
     print >>sys.stderr, 'usage: %s hostname port' % sys.argv[0]
     sys.exit(-1)
-FLAG_INT = 0
+x = 0
 for f in flags:
     if f.color == flagColor:
         FLAG_INT = x
-    FLAG_INT += 1
+    x += 1
 
 forward_list = list(linspace(ANIMATION_MIN, ANIMATION_MAX, ANIMATION_FRAMES/2))
 backward_list = list(linspace(ANIMATION_MAX, ANIMATION_MIN, ANIMATION_FRAMES/2))

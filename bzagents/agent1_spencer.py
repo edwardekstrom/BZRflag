@@ -26,6 +26,7 @@ import time
 
 from bzrc import BZRC, Command
 from pFields import PField
+from visualizer import Visualizer
 
 class Agent(object):
     """Class handles all command and control logic for a teams tanks."""
@@ -195,6 +196,9 @@ def main():
 
     agent = Agent(bzrc)
 
+    visualizer = Visualizer(bzrc, 'red')
+    # visualizer.thread_start()
+
     prev_time = time.time()
 
     # Run the agent
@@ -202,6 +206,7 @@ def main():
         while True:
             time_diff = time.time() - prev_time
             agent.tick(time_diff)
+            # visualizer.visualize()
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."
         bzrc.close()
