@@ -58,7 +58,7 @@ except ImportError:
 # Constants
 class Visualizer:
 
-    def __init__(self,bzrc, flagColor):
+    def __init__(self,bzrc, display):
                 # Output file:
         self.FILENAME = 'fields.gpi'
         # Size of the world (one of the "constants" in bzflag):
@@ -73,6 +73,7 @@ class Visualizer:
         self.ANIMATION_MAX = 500
         self.ANIMATION_FRAMES = 50
 
+        self.display = display
         self.BZRC = bzrc
         self.constants = self.BZRC.get_constants()
         self.flag_sphere = 400
@@ -91,6 +92,7 @@ class Visualizer:
             for corner in ob:
                 if self.dist(averageX,averageY,corner[0],corner[1]) > self.obstacle_sphere:
                     self.obstacle_sphere = self.dist(averageX,averageY,corner[0],corner[1])
+                    self.enemy_sphere = self.dist(averageX,averageY,corner[0],corner[1])
                     # print self.obstacle_sphere
             tup = (averageX,averageY)
             self.obstacle_centers.append(tup)
@@ -103,7 +105,7 @@ class Visualizer:
         print >>outfile, self.plot_field(field_function)
 
     def visualize(self):
-        time.sleep(10)
+        time.sleep(1)
         forward_list = list(linspace(self.ANIMATION_MIN, self.ANIMATION_MAX, self.ANIMATION_FRAMES/2))
         backward_list = list(linspace(self.ANIMATION_MAX, self.ANIMATION_MIN, self.ANIMATION_FRAMES/2))
         anim_points = forward_list + backward_list
@@ -112,17 +114,10 @@ class Visualizer:
         gp.write(self.gnuplot_header(-self.WORLDSIZE / 2, self.WORLDSIZE / 2))
         gp.write(self.draw_obstacles(self.OBSTACLES))
         for scale in cycle(anim_points):
-                # time.sleep(.3)
-                # print scale
             self.mytanks, self.othertanks, self.flags, shots = self.BZRC.get_lots_o_stuff()
-            # self.f = flags[self.FLAG_INT]
             field_function = self.generate_field_function(scale)
             gp.write(self.plot_field(field_function))
 
-    # def thread_start(self):
-    #       threading.Thread(target=self._thread_start).start()
-
-# vim: et sw=4 sts=4
 
     def generate_field_function(self, scale):
         def function(x, y):
@@ -134,23 +129,23 @@ class Visualizer:
                 closest_flag = self.choose_best_flag(x,y)
                 enemy_x, enemy_y, enemy_dist = self.closest_enemy(x,y)
                 obstacle_x, obstacle_y, d = self.closest_obstacle(x,y)
-                # if enemy_dist < self.enemy_sphere:
-                #     return x - enemy_x, y - enemy_y
-                # elif d < self.obstacle_sphere:
-                #     return math.cos(y - obstacle_y), -math.sin(x - obstacle_x)
-                # else:
-                #     return closest_flag.x - x, closest_flag.y - y
-                return closest_flag.x - x, closest_flag.y - y #attractive
-                # return x - enemy_x, y - enemy_y #repulsive
-                # return math.cos(y - obstacle_y), -math.sin(x - obstacle_x) #tangential
+                if self.display == 'attractive':
+                    return closest_flag.x - x, closest_flag.y - y #attractive
+                elif self.display == 'repulsive':
+                    return x - enemy_x, y - enemy_y #repulsive
+                elif self.display == 'tangential':
+                    return math.cos(y - obstacle_y), -math.sin(x - obstacle_x) #tangential
+                else:
+                    if enemy_dist < self.enemy_sphere:
+                        return x - enemy_x, y - enemy_y
+                    elif d < self.obstacle_sphere:
+                        return math.cos(y - obstacle_y), -math.sin(x - obstacle_x)
+                    else:
+                        return closest_flag.x - x, closest_flag.y - y
+                
                 
         return function
 
-
-
-
-    ########################################################################
-    # Helper Functions
 
     def gpi_point(self, x, y, vec_x, vec_y):
         '''Create the centered gpi data point (4-tuple) for a position and
@@ -211,7 +206,18 @@ class Visualizer:
             # if countG == 0:
             # print 'f(y) = f(' + str(y) + ") = " + str(f_y)
             # print 'f(x) = f(' + str(x) + ") = " + str(f_x)
+            closest_flag = self.choose_best_flag(x,y)
+            enemy_x, enemy_y, enemy_dist = self.closest_enemy(x,y)
+            obstacle_x, obstacle_y, d = self.closest_obstacle(x,y)
+#***********************************************************************
+#***********************************************************************
+#***********************************************************************
+#***********************************************************************
             plotvalues = self.gpi_point(x, y, f_x, f_y)
+            if self.display == 'repulsive' and enemy_dist > self.enemy_sphere:
+                plotvalues = None
+            if self.display == 'tangential' and d > self.obstacle_sphere:
+                plotvalues = None
             if plotvalues is not None:
                 x1, y1, x2, y2 = plotvalues
                 s += '%s %s %s %s\n' % (x1, y1, x2, y2)
@@ -259,36 +265,39 @@ class Visualizer:
                 ydist = abs(base.corner1_y - base.corner3_y) / 2.0
                 base_x = max(base.corner1_x, base.corner3_x) - (xdist/2.0)
                 base_y = max(base.corner1_y, base.corner3_y) - (ydist/2.0)
-                return (base_x, base_y)
+        
+        return (base_x, base_y)
 
     def choose_best_flag(self, x, y):
         best_flag = None
-        best_flag_dist = 2 * float(self.constants['worldsize'])
+        best_flag_dist = (2 * float(self.constants['worldsize']))**2
         for f in self.flags:
-	        # print str(len(self.flags))
-	        if f.color != self.constants['team'] and f.poss_color != self.constants['team']:
-	            dist = math.sqrt((f.x - x)**2 + (f.y - y)**2)
-	            if dist < best_flag_dist:
-	                best_flag_dist = dist
-	                best_flag = f
-	            if best_flag is None:
-	                return self.flags[0]
-	            else:
-	                return best_flag
-	                # return self.flags[2]
+            # print str(len(self.flags))
+            if f.color != self.constants['team'] and f.poss_color != self.constants['team']:
+                dist = math.sqrt((f.x - x)**2 + (f.y - y)**2)
+                if dist < best_flag_dist:
+                    best_flag_dist = dist
+                    best_flag = f
+                    # print 'new best flag ' + f.color
+        if best_flag is None:
+            return self.flags[0]
+        else:
+            # print best_flag.color
+            return best_flag
+            # return self.flags[2]
 
 def main():
     # Process CLI arguments.
     try:
-        execname, host, port, color = sys.argv
+        execname, host, port, display = sys.argv
     except ValueError:
         execname = sys.argv[0]
         print >>sys.stderr, '%s: incorrect number of arguments' % execname
-        print >>sys.stderr, 'usage: %s hostname port' % sys.argv[0]
+        print >>sys.stderr, 'usage: %s hostname port fieldToDisplay' % sys.argv[0]
         sys.exit(-1)
 
     bzrc = BZRC(host,int(port))
-    v = Visualizer(bzrc, color)
+    v = Visualizer(bzrc, display)
     v.visualize()
 
 if __name__ == '__main__':
