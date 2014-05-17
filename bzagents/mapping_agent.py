@@ -23,6 +23,7 @@
 import sys
 import math
 import time
+import random
 
 from bzrc import BZRC, Command
 from pFields import PField
@@ -38,6 +39,11 @@ class Agent(object):
         self.flag_sphere = 400
         self.obstacle_sphere = 1000
         self.enemy_sphere = 100
+        self.explore_sphere = 50
+
+        self.prev_x = 0
+        self.prev_y = 0
+        self.stuck_ticks = 0
 
         self.path_fields = []
         # pf1 = PField(-350, 350, 0, self.flag_sphere, 'attract')
@@ -49,42 +55,40 @@ class Agent(object):
         # self.path_fields.append(pf3)
         # self.path_fields.append(pf4)
         
+        self.row_step = 50
+        self.col_step = 100
+        start_x = -350
+        start_y = 350
+        end_x = 350
+        end_y = -350
         odd = False
-        for row in self.my_range(-350, 350, 50):
+        for row in self.my_range(-start_y, -end_y, self.row_step):
             # print ""
-            for col in self.my_range(-350, 350, 100):
+            for col in self.my_range(start_x, end_x, self.col_step):
                 r = -row
                 c = col
                 if odd:
                     c *= -1
                 #print "%f, %f" % (r, c)
-                newpf = PField(c, r, 0, self.flag_sphere, 'attract')
+                newpf = PField(c, r, 0, self.explore_sphere, 'attract')
                 self.path_fields.append(newpf)
             odd = not odd
 
+        # odd = False
+        # for row in self.my_range(-350, 350, 50):
+        #     # print ""
+        #     for col in self.my_range(-350, 350, 100):
+        #         r = -row
+        #         c = col
+        #         if odd:
+        #             c *= -1
+        #         #print "%f, %f" % (r, c)
+        #         newpf = PField(c, r, 0, self.flag_sphere, 'attract')
+        #         self.path_fields.append(newpf)
+        #     odd = not odd
+
 
         self.cur_path = self.path_fields.pop(0)
-
-        # self.obstacles = bzrc.get_obstacles()
-        # self.obstacle_centers = []
-        # for ob in self.obstacles:
-        #     totalX = 0
-        #     totalY = 0
-        #     for corner in ob:
-        #         totalX += corner[0]
-        #         totalY += corner[1]
-        #     averageX = totalX / len(ob)
-        #     averageY = totalY / len(ob)
-        #     for corner in ob:
-        #         if self.dist(averageX,averageY,corner[0],corner[1]) > self.obstacle_sphere:
-        #             self.obstacle_sphere = self.dist(averageX,averageY,corner[0],corner[1])
-        #             # print self.obstacle_sphere
-        #     tup = (averageX,averageY)
-        #     self.obstacle_centers.append(tup)
-        # print ""
-        # for o in self.bzrc.get_obstacles():
-        #     print o
-        # print ""
 
     def my_range(self, start, end, step):
         while start <= end:
@@ -94,73 +98,76 @@ class Agent(object):
 
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
-        # print 
-        mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
-        self.mytanks = mytanks
-        self.othertanks = othertanks
-        self.flags = flags
-        self.shots = shots
-        self.enemies = [tank for tank in othertanks if tank.color !=
-                        self.constants['team']]
+        # don't need to know where the flags or shots are when exploring.  Enemies are included in the 'othertanks' call
+
+        self.bzrc.sendline('mytanks')
+        self.bzrc.sendline('othertanks')
+        self.bzrc.read_ack()
+        self.mytanks = self.bzrc.read_mytanks()
+        self.bzrc.read_ack()
+        self.othertanks = self.bzrc.read_othertanks()
 
         self.commands = []
-
-
-
-        # for tank in mytanks:
-        #     if tank.status != 'dead' and tank.index != 0:
-        #         pfo = None
-        #         # obstacle_x, obstacle_y, d = self.closest_obstacle(tank)
-        #         # if d < self.obstacle_sphere:
-        #         #     # print str(d)
-        #         #     pfo = PField(obstacle_x, obstacle_y, 0, self.obstacle_sphere, 'tangent')
-
-        #         pfe = None
-        #         enemy_x, enemy_y, enemy_dist = self.closest_tank(tank, self.othertanks)
-        #         if enemy_dist < self.enemy_sphere:
-        #             # print enemy_dist
-        #             pfe = PField(enemy_x, enemy_y, 0, 2 * self.enemy_sphere, 'attract')
-
-        #         # if flag possession, then put a pf on the home_base
-        #         pf = None
-        #         # if(tank.flag == '-'):
-        #         #     best_flag = self.choose_best_flag(tank)
-        #         #     pf = PField(best_flag.x, best_flag.y, 0, self.flag_sphere, 'attract')
-        #         # # if not possessed, then put a pf on a flag
-        #         # else:
-        #         #     home_base_x, home_base_y = self.find_home_base(tank)
-        #         #     pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
-        #         self.pf_move(tank, pf, pfe, pfo)
         
-        exp_tank = mytanks[0]
-        #for exp_tank in mytanks:
-        self.pf_move(exp_tank, self.cur_path, None, None)
-        if(abs(exp_tank.x - self.cur_path.x) <= 20 and abs(exp_tank.y - self.cur_path.y) <= 20):
+        # in the rare case that a tank runs into its own bullet, don't do anything while it is dead
+        exp_tank = self.mytanks[0]
+        if(exp_tank.status == 'dead'):
+            return
+
+        # if the tank has no change in position, it is stuck. Try turning and shooting whatever it is is next to (usually a tank)
+        travel_d = self.dist(exp_tank.x, exp_tank.y, self.prev_x, self.prev_y)
+        pfe = None
+        if travel_d == 0.0:
+            self.stuck_ticks += 1
+            print "I'm stuck %d" % self.stuck_ticks
+            enemy_x, enemy_y, enemy_dist = self.closest_tank(exp_tank)
+            # a temp sphere of 10 for enemies prevents the explorer tank from tracking down tanks that aren't next to it
+            tempPFEsphere = 10
+            if enemy_dist < tempPFEsphere:
+                pfe = PField(enemy_x, enemy_y, 0, tempPFEsphere, 'attract')
+        else:
+            self.stuck_ticks = 0
+
+        # move the tank to the next pField (explore spot or shoot tank)
+        self.pf_move(exp_tank, self.cur_path, pfe)
+        tolerance = 20
+        if(abs(exp_tank.x - self.cur_path.x) <= tolerance and abs(exp_tank.y - self.cur_path.y) <= tolerance):
             print "nailed it!"
             if self.path_fields:
                 self.cur_path = self.path_fields.pop(0)
 
-        #for tank in mytanks:
-            #self.attack_enemies(tank)
+        
+        # if the tank is stuck longer than the really stuck tollerance, shift the pField down or up depending on the quadrant
+        really_stuck_tolerance = 40
+        if self.stuck_ticks >= really_stuck_tolerance:
+            print "I'm REALLY stuck"
+            direction = 1
+            if(exp_tank.y <= 0):
+                direction = -1
 
-        #for tank in mytanks:
-            #self.run_to_flag(tank)
+            self.cur_path = PField(self.cur_path.x, self.cur_path.y + (self.row_step * direction), 0, self.explore_sphere, 'attract')
+            print "%f, %f" % (self.cur_path.x, self.cur_path.y)
+            self.stuck_ticks = 0
 
+
+        self.prev_x = exp_tank.x
+        self.prev_y = exp_tank.y
         results = self.bzrc.do_commands(self.commands)
 
-    def pf_move(self, tank, pf, pfo, pfe):
+    def flip_a_coin(self):
+        res = random.randint(0,1)
+        if(res):
+            return res
+        else:
+            return -1
+
+    def pf_move(self, tank, pf, pfe):
         final_angle = 0
 
-        if pfo != None:
-            # print 'pfo != None'
-            #print self.constants['team'] + " tank: %d = pfo" % tank.index
-            speedmod, angle = pfo.calc_vector(tank.x, tank.y)
-        elif pfe != None:
-            # print 'pfe ! = None'
+        if pfe != None:
             #print self.constants['team'] + " tank: %d = pfe" % tank.index
             speedmod, angle = pfe.calc_vector(tank.x, tank.y)
         elif pf != None:
-            # print 'else'
             #print self.constants['team'] + " tank: %d = pf" % tank.index
             speedmod, angle = pf.calc_vector(tank.x, tank.y)
         else:
@@ -175,63 +182,36 @@ class Agent(object):
         else:
             final_angle = (float(final_angle) + float(angle)) / 2.0
 
-        
-        # current_tank_speed = math.sqrt(float(tank.vx**2) + float(tank.vy**2))
-        # print current_tank_speed
-
-        #command = Command(tank.index, speedmod * current_tank_speed, 2 * final_angle, True)
-        shoot = False
-        if tank.index == 0:
-            shoot = True
-        command = Command(tank.index, speedmod, 2 * final_angle, shoot)
+        command = Command(tank.index, speedmod, 2 * final_angle, True)
         self.commands.append(command)
-    
-    def closest_obstacle(self, tank):
+
+    def closest_tank(self, tank):
         closest_x = (2 * float(self.constants['worldsize']))**2
         closest_y = (2 * float(self.constants['worldsize']))**2
         best_d = (2 * float(self.constants['worldsize']))**2
 
-        # obstacles = self.bzrc.get_obstacles()
-        # for o in self.obstacle_centers:
-        #     x,y = o
-        #     d = self.dist(x, y, tank.x, tank.y)
-        #     if d < best_d:
-        #         best_d = d
-        #         closest_x = x
-        #         closest_y = y
+        for otank in self.othertanks:
+            if(otank.status != 'dead'):
+                d = self.dist(otank.x, otank.y, tank.x, tank.y)
+                if d < best_d:
+                    best_d = d
+                    closest_x = otank.x
+                    closest_y = otank.y
 
-        return (closest_x, closest_y, best_d)
-
-    def closest_tank(self, tank, othertanks):
-        closest_x = (2 * float(self.constants['worldsize']))**2
-        closest_y = (2 * float(self.constants['worldsize']))**2
-        best_d = (2 * float(self.constants['worldsize']))**2
-
-        for otank in othertanks:
-            d = self.dist(otank.x, otank.y, tank.x, tank.y)
-            if d < best_d:
-                best_d = d
-                closest_x = otank.x
-                closest_y = otank.y
-
-        return (closest_x, closest_y, best_d)
-
-    def closest_enemy(self, tank, enemies):
-        closest_x = (2 * float(self.constants['worldsize']))**2
-        closest_y = (2 * float(self.constants['worldsize']))**2
-        best_d = (2 * float(self.constants['worldsize']))**2
-
-        for e in enemies:
-            d = self.dist(e.x, e.y, tank.x, tank.y)
-            if d < best_d:
-                best_d = d
-                closest_x = e.x
-                closest_y = e.y
+        for myt in self.mytanks:
+            if myt.index != 0 and myt.status != 'dead':
+                d = self.dist(myt.x, myt.y, tank.x, tank.y)
+                if d < best_d:
+                    best_d = d
+                    closest_x = myt.x
+                    closest_y = myt.y
 
         return (closest_x, closest_y, best_d)
 
     def dist(self, x1, y1, x2, y2):
-        return (x1 - x2)**2 + (y1 - y2)**2
+        dist_result = math.sqrt((float(x1) - float(x2))**2 + (float(y1) - float(y2))**2)
+        #print dist_result
+        return dist_result
 
     def find_home_base(self, tank):
         bases = self.bzrc.get_bases()
@@ -257,49 +237,6 @@ class Agent(object):
             return self.flags[0]
         else:
             return best_flag
-            # return self.flags[2]
-
-
-    def run_to_flag(self, tank):
-        best_flag = None
-        best_flag_dist = 2 * float(self.constants['worldsize'])
-        for f in self.flags:
-            if f.color != self.constants['team']:
-                dist = math.sqrt((f.x - tank.x)**2 + (f.y - tank.y)**2)
-                if dist < best_flag_dist:
-                    best_flag_dist = dist
-                    best_flag = f
-        if best_flag is None:
-            command = Command(tank.index, 0, 0, False)
-            self.commands.append(command)
-        else:
-            self.move_to_position(tank, best_flag.x, best_flag.y)
-
-    def attack_enemies(self, tank):
-        """Find the closest enemy and chase it, shooting as you go."""
-        best_enemy = None
-        best_dist = 2 * float(self.constants['worldsize'])
-        for enemy in self.enemies:
-            if enemy.status != 'alive':
-                continue
-            dist = math.sqrt((enemy.x - tank.x)**2 + (enemy.y - tank.y)**2)
-            if dist < best_dist:
-                best_dist = dist
-                best_enemy = enemy
-        if best_enemy is None:
-            command = Command(tank.index, 0, 0, False)
-            self.commands.append(command)
-        else:
-            self.move_to_position(tank, best_enemy.x, best_enemy.y)
-
-    def move_to_position(self, tank, target_x, target_y):
-        """Set command to move to given coordinates."""
-        target_angle = math.atan2(target_y - tank.y,
-                                  target_x - tank.x)
-        relative_angle = self.normalize_angle(target_angle - tank.angle)
-        # index, speed, angvel, shoot
-        command = Command(tank.index, 1, 2 * relative_angle, False)
-        self.commands.append(command)
 
     def normalize_angle(self, angle):
         """Make any angle be between +/- pi."""
