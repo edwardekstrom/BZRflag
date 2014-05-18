@@ -3,6 +3,6 @@
 sleep 2
 python bzagents/mapping_agent.py localhost 50100 &
 # python bzagents/dumb_agent.py localhost 50101 &
-python bzagents/dumb_agent.py localhost 50102 &
-python bzagents/mapping_agent.py localhost 50103 &
+# python bzagents/dumb_agent.py localhost 50102 &
+# python bzagents/mapping_agent.py localhost 50103 &
 

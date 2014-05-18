@@ -27,6 +27,49 @@ import random
 
 from bzrc import BZRC, Command
 from pFields import PField
+from grid import Grid
+
+import numpy
+from numpy import *
+import OpenGL
+OpenGL.ERROR_CHECKING = False
+from OpenGL.GL import *
+from OpenGL.GLUT import *
+from OpenGL.GLU import *
+from numpy import zeros
+
+
+grid = None
+
+def draw_grid():
+    # This assumes you are using a numpy array for your grid
+    width, height = grid.shape
+    glRasterPos2f(-1, -1)
+    glDrawPixels(width, height, GL_LUMINANCE, GL_FLOAT, grid)
+    glFlush()
+    glutSwapBuffers()
+
+def update_grid(new_grid):
+    global grid
+    grid = new_grid
+
+
+
+def init_window(width, height):
+    global window
+    global grid
+    grid = zeros((width, height))
+    glutInit(())
+    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH)
+    glutInitWindowSize(width, height)
+    glutInitWindowPosition(0, 0)
+    window = glutCreateWindow("Grid filter")
+    glutDisplayFunc(draw_grid)
+    glMatrixMode(GL_PROJECTION)
+    glLoadIdentity()
+    glMatrixMode(GL_MODELVIEW)
+    glLoadIdentity()
+    #glutMainLoop()
 
 class Agent(object):
     """Class handles all command and control logic for a teams tanks."""
@@ -46,6 +89,24 @@ class Agent(object):
         self.stuck_ticks = 0
 
         self.path_fields = []
+        # self.bzrc.ini
+
+
+        # print 'hello'
+        pos,grid = self.bzrc.get_occgrid(0)
+        x,y = pos
+        print x
+        print y
+        self.grid = Grid(int(self.constants['worldsize']),
+            int(self.constants['worldsize']),
+            float(self.constants['truepositive']),
+            float(self.constants['truepositive']))
+        # self.grid.init_window(int(self.constants['worldsize']),int(self.constants['worldsize']))
+        # for g in grid:
+        #     print g
+        # print pos
+        # print grid
+        # print 'world'
         # pf1 = PField(-350, 350, 0, self.flag_sphere, 'attract')
         # pf2 = PField(-350, -350, 0, self.flag_sphere, 'attract')
         # pf3 = PField(350, -350, 0, self.flag_sphere, 'attract')
@@ -100,13 +161,10 @@ class Agent(object):
         """Some time has passed; decide what to do next."""
         # don't need to know where the flags or shots are when exploring.  Enemies are included in the 'othertanks' call
 
-        self.bzrc.sendline('mytanks')
-        self.bzrc.sendline('othertanks')
-        self.bzrc.read_ack()
-        self.mytanks = self.bzrc.read_mytanks()
-        self.bzrc.read_ack()
-        self.othertanks = self.bzrc.read_othertanks()
-
+        self.mytanks = self.bzrc.get_mytanks()
+        self.othertanks = self.bzrc.get_othertanks()
+        pos,partialGrid = self.bzrc.get_occgrid(0)
+        self.grid.updateGrid(pos,partialGrid)
         self.commands = []
         
         # in the rare case that a tank runs into its own bullet, don't do anything while it is dead
@@ -119,7 +177,7 @@ class Agent(object):
         pfe = None
         if travel_d == 0.0:
             self.stuck_ticks += 1
-            print "I'm stuck %d" % self.stuck_ticks
+            # print "I'm stuck %d" % self.stuck_ticks
             enemy_x, enemy_y, enemy_dist = self.closest_tank(exp_tank)
             # a temp sphere of 10 for enemies prevents the explorer tank from tracking down tanks that aren't next to it
             tempPFEsphere = 10
@@ -132,7 +190,7 @@ class Agent(object):
         self.pf_move(exp_tank, self.cur_path, pfe)
         tolerance = 20
         if(abs(exp_tank.x - self.cur_path.x) <= tolerance and abs(exp_tank.y - self.cur_path.y) <= tolerance):
-            print "nailed it!"
+            # print "nailed it!"
             if self.path_fields:
                 self.cur_path = self.path_fields.pop(0)
 
@@ -140,7 +198,7 @@ class Agent(object):
         # if the tank is stuck longer than the really stuck tollerance, shift the pField down or up depending on the quadrant
         really_stuck_tolerance = 40
         if self.stuck_ticks >= really_stuck_tolerance:
-            print "I'm REALLY stuck"
+            # print "I'm REALLY stuck"
             direction = 1
             if(exp_tank.y <= 0):
                 direction = -1
@@ -262,15 +320,24 @@ def main():
     #bzrc = BZRC(host, int(port), debug=True)
     bzrc = BZRC(host, int(port))
 
+
     agent = Agent(bzrc)
 
+    init_window(int(agent.constants['worldsize']),int(agent.constants['worldsize']))
+    print 'init complete'
     prev_time = time.time()
 
     # Run the agent
     try:
+        tic = 0
         while True:
             time_diff = time.time() - prev_time
             agent.tick(time_diff)
+            if(tic == 10):
+                update_grid(numpy.array(zip(*agent.grid.grid)))
+                draw_grid()
+                tic = 0
+            tic+=1
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."
         bzrc.close()
