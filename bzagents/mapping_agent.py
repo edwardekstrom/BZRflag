@@ -100,7 +100,7 @@ class Agent(object):
         self.grid = Grid(int(self.constants['worldsize']),
             int(self.constants['worldsize']),
             float(self.constants['truepositive']),
-            float(self.constants['truepositive']))
+            float(self.constants['truenegative']))
         # self.grid.init_window(int(self.constants['worldsize']),int(self.constants['worldsize']))
         # for g in grid:
         #     print g
@@ -160,11 +160,11 @@ class Agent(object):
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
         # don't need to know where the flags or shots are when exploring.  Enemies are included in the 'othertanks' call
-
-        self.mytanks = self.bzrc.get_mytanks()
-        self.othertanks = self.bzrc.get_othertanks()
         pos,partialGrid = self.bzrc.get_occgrid(0)
         self.grid.updateGrid(pos,partialGrid)
+        self.mytanks = self.bzrc.get_mytanks()
+        self.othertanks = self.bzrc.get_othertanks()
+        
         self.commands = []
         
         # in the rare case that a tank runs into its own bullet, don't do anything while it is dead
@@ -187,7 +187,14 @@ class Agent(object):
             self.stuck_ticks = 0
 
         # move the tank to the next pField (explore spot or shoot tank)
-        self.pf_move(exp_tank, self.cur_path, pfe)
+        # for tank in self.mytanks:
+        #     if tank.status == 'dead':
+        #         return
+        #     else:
+        #         self.pf_move(tank, self.cur_path, pfe)
+        #         pos,partialGrid = self.bzrc.get_occgrid(tank.index)
+        #         self.grid.updateGrid(pos,partialGrid)
+        self.pf_move(exp_tank, self.cur_path, pfe)    
         tolerance = 20
         if(abs(exp_tank.x - self.cur_path.x) <= tolerance and abs(exp_tank.y - self.cur_path.y) <= tolerance):
             # print "nailed it!"
