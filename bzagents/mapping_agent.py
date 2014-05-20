@@ -79,6 +79,7 @@ class Agent(object):
         self.constants = self.bzrc.get_constants()
         self.commands = []
         self.potentialFields = []
+        self.updates = []
         self.flag_sphere = 400
         self.obstacle_sphere = 1000
         self.enemy_sphere = 100
@@ -160,17 +161,26 @@ class Agent(object):
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
         # don't need to know where the flags or shots are when exploring.  Enemies are included in the 'othertanks' call
-        pos,partialGrid = self.bzrc.get_occgrid(0)
-        self.grid.updateGrid(pos,partialGrid)
+        # pos,partialGrid = self.bzrc.get_occgrid()
+        # self.grid.updateGrid(pos,partialGrid)
         self.mytanks = self.bzrc.get_mytanks()
         self.othertanks = self.bzrc.get_othertanks()
         
         self.commands = []
+        for tank in self.mytanks:
+            self.doTank(tank)
+        # self.doTank(self.mytanks[0])
+        # self.doTank(self.mytanks[1])
         
         # in the rare case that a tank runs into its own bullet, don't do anything while it is dead
-        exp_tank = self.mytanks[0]
+    def doTank(self, tank):        
+        exp_tank = tank
         if(exp_tank.status == 'dead'):
             return
+        if tic % 4 == 0:
+            pos,partialGrid = self.bzrc.get_occgrid(tank.index)
+            self.updates.append((pos,partialGrid))
+        # self.grid.updateGrid(pos,partialGrid)
 
         # if the tank has no change in position, it is stuck. Try turning and shooting whatever it is is next to (usually a tank)
         travel_d = self.dist(exp_tank.x, exp_tank.y, self.prev_x, self.prev_y)
@@ -218,6 +228,13 @@ class Agent(object):
         self.prev_x = exp_tank.x
         self.prev_y = exp_tank.y
         results = self.bzrc.do_commands(self.commands)
+
+    def doUpdate(self):
+        # print len(self.updates)
+        for update in self.updates:
+            pos,partialGrid = update
+            self.grid.updateGrid(pos,partialGrid)
+        self.updates = []
 
     def flip_a_coin(self):
         res = random.randint(0,1)
@@ -336,11 +353,13 @@ def main():
 
     # Run the agent
     try:
+        global tic
         tic = 0
         while True:
             time_diff = time.time() - prev_time
             agent.tick(time_diff)
             if(tic == 10):
+                agent.doUpdate()
                 update_grid(numpy.array(zip(*agent.grid.grid)))
                 draw_grid()
                 tic = 0
