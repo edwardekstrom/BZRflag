@@ -85,8 +85,12 @@ class Agent(object):
         self.enemy_sphere = 100
         self.explore_sphere = 50
 
-        self.prev_x = 0
-        self.prev_y = 0
+        self.prev_x = {}
+        self.prev_y = {}
+        for x in xrange(20):
+            self.prev_x[x] = 0
+            self.prev_y[x] = 0
+            
         self.stuck_ticks = 0
 
         self.path_fields = []
@@ -183,7 +187,7 @@ class Agent(object):
         # self.grid.updateGrid(pos,partialGrid)
 
         # if the tank has no change in position, it is stuck. Try turning and shooting whatever it is is next to (usually a tank)
-        travel_d = self.dist(exp_tank.x, exp_tank.y, self.prev_x, self.prev_y)
+        travel_d = self.dist(exp_tank.x, exp_tank.y, self.prev_x[exp_tank.index], self.prev_y[exp_tank.index])
         pfe = None
         if travel_d == 0.0:
             self.stuck_ticks += 1
@@ -225,8 +229,8 @@ class Agent(object):
             self.stuck_ticks = 0
 
 
-        self.prev_x = exp_tank.x
-        self.prev_y = exp_tank.y
+        self.prev_x[exp_tank.index] = exp_tank.x
+        self.prev_y[exp_tank.index] = exp_tank.y
         results = self.bzrc.do_commands(self.commands)
 
     def doUpdate(self):
