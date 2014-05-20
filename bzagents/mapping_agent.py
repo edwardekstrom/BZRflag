@@ -189,14 +189,15 @@ class Agent(object):
         # if the tank has no change in position, it is stuck. Try turning and shooting whatever it is is next to (usually a tank)
         travel_d = self.dist(exp_tank.x, exp_tank.y, self.prev_x[exp_tank.index], self.prev_y[exp_tank.index])
         pfe = None
+        # print travel_d
         if travel_d == 0.0:
             self.stuck_ticks += 1
-            # print "I'm stuck %d" % self.stuck_ticks
-            enemy_x, enemy_y, enemy_dist = self.closest_tank(exp_tank)
-            # a temp sphere of 10 for enemies prevents the explorer tank from tracking down tanks that aren't next to it
-            tempPFEsphere = 10
-            if enemy_dist < tempPFEsphere:
-                pfe = PField(enemy_x, enemy_y, 0, tempPFEsphere, 'attract')
+            # # print "I'm stuck %d" % self.stuck_ticks
+            # enemy_x, enemy_y, enemy_dist = self.closest_tank(exp_tank)
+            # # a temp sphere of 10 for enemies prevents the explorer tank from tracking down tanks that aren't next to it
+            # tempPFEsphere = 10
+            # if enemy_dist < tempPFEsphere:
+            #     pfe = PField(enemy_x, enemy_y, 1, tempPFEsphere, 'attract')
         else:
             self.stuck_ticks = 0
 
@@ -219,7 +220,7 @@ class Agent(object):
         # if the tank is stuck longer than the really stuck tollerance, shift the pField down or up depending on the quadrant
         really_stuck_tolerance = 40
         if self.stuck_ticks >= really_stuck_tolerance:
-            # print "I'm REALLY stuck"
+            print "I'm REALLY stuck"
             direction = 1
             if(exp_tank.y <= 0):
                 direction = -1
