@@ -121,12 +121,12 @@ class Agent(object):
         # self.path_fields.append(pf3)
         # self.path_fields.append(pf4)
         
-        self.row_step = 50
+        self.row_step = 400
         self.col_step = 100
         start_x = -350
-        start_y = 350
+        start_y = 200
         end_x = 350
-        end_y = -350
+        end_y = -200
         odd = False
         for row in self.my_range(-start_y, -end_y, self.row_step):
             # print ""

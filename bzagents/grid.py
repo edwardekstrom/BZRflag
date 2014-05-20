@@ -12,8 +12,8 @@ class Grid:
 	def __init__(self, width, height,truePos,trueNeg):
 		self.dimensions = (width, height)
 		self.grid = zeros(self.dimensions)
-		self.truePos = truePos
-		self.trueNeg = trueNeg
+		self.truePos = truePos + 30
+		self.trueNeg = trueNeg + 30
 		# print self.truePos
 		# print self.trueNeg
 		# print self.grid
