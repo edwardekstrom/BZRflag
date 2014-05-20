@@ -37,13 +37,13 @@ class Grid:
 				prior = self.grid[x][y]
 
 				if row == 1:
-					chanceOccupied = self.truePos * prior
-					chanceUnoccupied = (1 - self.trueNeg) * (1 - prior)
+					occupied = self.truePos * prior
+					unoccupied = (1 - self.trueNeg) * (1 - prior)
 				else:
-					chanceOccupied = (1 - self.truePos) * prior
-					chanceUnoccupied = self.trueNeg * (1 - prior)
+					occupied = (1 - self.truePos) * prior
+					unoccupied = self.trueNeg * (1 - prior)
 				
-				self.grid[x][y] = chanceOccupied / (chanceOccupied + chanceUnoccupied)
+				self.grid[x][y] = occupied / (occupied + unoccupied)
 
 				y+=1
 			y=y0

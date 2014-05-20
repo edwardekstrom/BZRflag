@@ -94,10 +94,10 @@ class Agent(object):
 
 
         # print 'hello'
-        pos,grid = self.bzrc.get_occgrid(0)
-        x,y = pos
-        print x
-        print y
+        # pos,grid = self.bzrc.get_occgrid(0)
+        # x,y = pos
+        # print x
+        # print y
         self.grid = Grid(int(self.constants['worldsize']),
             int(self.constants['worldsize']),
             float(self.constants['truepositive']),
