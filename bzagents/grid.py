@@ -14,8 +14,8 @@ class Grid:
 		self.grid = zeros(self.dimensions)
 		self.truePos = truePos
 		self.trueNeg = trueNeg
-		print self.truePos
-		print self.trueNeg
+		# print self.truePos
+		# print self.trueNeg
 		# print self.grid
 		self.grid.fill(.1)
 		# print self.grid

@@ -87,11 +87,11 @@ class Agent(object):
 
         self.prev_x = {}
         self.prev_y = {}
+        self.stuck_ticks = {}
         for x in xrange(20):
             self.prev_x[x] = 0
             self.prev_y[x] = 0
-            
-        self.stuck_ticks = 0
+            self.stuck_ticks[x] = 0
 
         self.path_fields = []
         # self.bzrc.ini
@@ -191,7 +191,7 @@ class Agent(object):
         pfe = None
         # print travel_d
         if travel_d == 0.0:
-            self.stuck_ticks += 1
+            self.stuck_ticks[exp_tank.index] = self.stuck_ticks[exp_tank.index] + 1
             # # print "I'm stuck %d" % self.stuck_ticks
             # enemy_x, enemy_y, enemy_dist = self.closest_tank(exp_tank)
             # # a temp sphere of 10 for enemies prevents the explorer tank from tracking down tanks that aren't next to it
@@ -199,7 +199,7 @@ class Agent(object):
             # if enemy_dist < tempPFEsphere:
             #     pfe = PField(enemy_x, enemy_y, 1, tempPFEsphere, 'attract')
         else:
-            self.stuck_ticks = 0
+            self.stuck_ticks[exp_tank.index] = 0
 
         # move the tank to the next pField (explore spot or shoot tank)
         # for tank in self.mytanks:
@@ -219,7 +219,7 @@ class Agent(object):
         
         # if the tank is stuck longer than the really stuck tollerance, shift the pField down or up depending on the quadrant
         really_stuck_tolerance = 40
-        if self.stuck_ticks >= really_stuck_tolerance:
+        if self.stuck_ticks[exp_tank.index] > really_stuck_tolerance:
             print "I'm REALLY stuck"
             direction = 1
             if(exp_tank.y <= 0):
@@ -227,7 +227,7 @@ class Agent(object):
 
             self.cur_path = PField(self.cur_path.x, self.cur_path.y + (self.row_step * direction), 0, self.explore_sphere, 'attract')
             print "%f, %f" % (self.cur_path.x, self.cur_path.y)
-            self.stuck_ticks = 0
+            self.stuck_ticks[exp_tank.index] = 0
 
 
         self.prev_x[exp_tank.index] = exp_tank.x
@@ -353,7 +353,7 @@ def main():
     agent = Agent(bzrc)
 
     init_window(int(agent.constants['worldsize']),int(agent.constants['worldsize']))
-    print 'init complete'
+    # print 'init complete'
     prev_time = time.time()
 
     # Run the agent
