@@ -34,6 +34,11 @@ class Agent(object):
         self.constants = self.bzrc.get_constants()
         self.commands = []
 
+        #positioning and tuning parameters
+        self.shooting_spot_x = -155
+        self.shooting_spot_y = 0
+        self.goal_sphere = 20
+
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
@@ -42,12 +47,19 @@ class Agent(object):
         self.flags = flags
         self.shots = shots
         self.enemies = [tank for tank in othertanks if tank.color !=
-                        self.constants['team']]
+                        self.constants['team']]        
 
         self.commands = []
 
+        reached = False
         for tank in mytanks:
-            self.attack_enemies(tank)
+            if(self.dist(tank.x, tank.y, self.shooting_spot_x, self.shooting_spot_y) <= self.goal_sphere):
+                reached = True
+
+            if(reached == False):
+                self.move_to_position(tank, self.shooting_spot_x, self.shooting_spot_y, 1.0)
+            else:
+                self.attack_enemies(tank)
 
         results = self.bzrc.do_commands(self.commands)
 
@@ -66,15 +78,19 @@ class Agent(object):
             command = Command(tank.index, 0, 0, False)
             self.commands.append(command)
         else:
-            self.move_to_position(tank, best_enemy.x, best_enemy.y)
+            self.move_to_position(tank, best_enemy.x, best_enemy.y, 0.0)
 
-    def move_to_position(self, tank, target_x, target_y):
+    def move_to_position(self, tank, target_x, target_y, speed):
         """Set command to move to given coordinates."""
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
-        command = Command(tank.index, 1, 2 * relative_angle, True)
+        command = Command(tank.index, speed, 2 * relative_angle, True)
         self.commands.append(command)
+
+    def dist(self, x1, y1, x2, y2):
+        dist_result = math.sqrt((float(x1) - float(x2))**2 + (float(y1) - float(y2))**2)
+        return dist_result
 
     def normalize_angle(self, angle):
         """Make any angle be between +/- pi."""

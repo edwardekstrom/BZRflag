@@ -34,6 +34,14 @@ class Agent(object):
         self.constants = self.bzrc.get_constants()
         self.commands = []
 
+        #positioning and tuning parameters
+        # self.start_spot_x = 0
+        # self.start_spot_y = 200
+        # self.end_spot_x = 0
+        # self.end_spot_y = -200
+        self.goals = [[0, 200, False], [0, -200, False]]
+        self.goal_sphere = 20
+
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
@@ -47,7 +55,16 @@ class Agent(object):
         self.commands = []
 
         for tank in mytanks:
-            self.attack_enemies(tank)
+            if(self.dist(tank.x, tank.y, self.goals[0][0], self.goals[0][1]) <= self.goal_sphere):
+                self.goals[0][2] = True
+
+            if(self.goals[0][2] == False):
+                #print "goal: (%f,%f)" % (self.goals[0][0], self.goals[0][1])
+                self.move_to_position(tank, self.goals[0][0], self.goals[0][1])
+            else:
+                acheived = self.goals.pop(0)
+                acheived[2] = False
+                self.goals.append(acheived)
 
         results = self.bzrc.do_commands(self.commands)
 
@@ -75,6 +92,10 @@ class Agent(object):
         relative_angle = self.normalize_angle(target_angle - tank.angle)
         command = Command(tank.index, 1, 2 * relative_angle, True)
         self.commands.append(command)
+
+    def dist(self, x1, y1, x2, y2):
+        dist_result = math.sqrt((float(x1) - float(x2))**2 + (float(y1) - float(y2))**2)
+        return dist_result
 
     def normalize_angle(self, angle):
         """Make any angle be between +/- pi."""
