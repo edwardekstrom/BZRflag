@@ -35,8 +35,10 @@ class Agent(object):
         self.commands = []
 
         # tuning and placement parameters
-        self.waiting_spot_x = -100
-        self.waiting_spot_y = 200
+        #self.waiting_spot_x = -100
+        #self.waiting_spot_y = 200
+        self.waiting_spot_x = 300
+        self.waiting_spot_y = 300
         self.goal_sphere = 20
 
     def tick(self, time_diff):
@@ -75,7 +77,7 @@ class Agent(object):
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
-        command = Command(tank.index, 1, 2 * relative_angle, True)
+        command = Command(tank.index, 1, 2 * relative_angle, False)
         self.commands.append(command)
 
     def normalize_angle(self, angle):

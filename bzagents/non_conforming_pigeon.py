@@ -23,6 +23,7 @@
 import sys
 import math
 import time
+import random
 
 from bzrc import BZRC, Command
 
@@ -33,48 +34,78 @@ class Agent(object):
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
+        self.stuck_ticks = 0
+        self.prev_x = 0.0
+        self.prev_y = 0.0
+
+        # tuning parameters
+        self.goal = self.select_new_goal()
+        self.goal_sphere = 20
+        self.shot_sphere = 100
+        self.stuck_tolerance = 30
 
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.mytanks = mytanks
         self.othertanks = othertanks
-        self.flags = flags
         self.shots = shots
-        self.enemies = [tank for tank in othertanks if tank.color !=
-                        self.constants['team']]
 
         self.commands = []
 
         for tank in mytanks:
-            self.attack_enemies(tank)
+            speed = 1.0
+            angle_mod = 0.0
+
+            if(tank.status == 'dead'):
+                print "dead"
+
+            # find new goal if stuck
+            if(tank.status != 'dead' and self.prev_x == tank.x and self.prev_y == tank.y):
+                self.stuck_ticks += 1
+                print "stuck %d" % self.stuck_ticks
+                if(self.stuck_ticks > self.stuck_tolerance):
+                    self.stuck_ticks = 0
+                    self.goal = self.select_new_goal()
+            else:
+                self.stuck_ticks = 0
+
+            self.prev_x = tank.x
+            self.prev_y = tank.y
+
+            # when a goal is reached request a new goal
+            if(self.dist(tank.x, tank.y, self.goal[0], self.goal[1]) <= self.goal_sphere):
+                self.goal[2] = True
+
+
+            if(self.goal[2] == False):
+                if(len(self.shots) > 0):
+                    shot_dist = self.dist(tank.x, tank.y, shots[0].x, shots[0].y)
+                    if(shot_dist <= self.shot_sphere):
+                        angle_mod = float(random.randint(-90,90)) * ((2 * math.pi) / 180.0)
+                        #speed = float(random.randint(0,1))
+                self.move_to_position(tank, self.goal[0], self.goal[1], angle_mod, speed)
+            else:
+                self.goal = self.select_new_goal()
 
         results = self.bzrc.do_commands(self.commands)
 
-    def attack_enemies(self, tank):
-        """Find the closest enemy and chase it, shooting as you go."""
-        best_enemy = None
-        best_dist = 2 * float(self.constants['worldsize'])
-        for enemy in self.enemies:
-            if enemy.status != 'alive':
-                continue
-            dist = math.sqrt((enemy.x - tank.x)**2 + (enemy.y - tank.y)**2)
-            if dist < best_dist:
-                best_dist = dist
-                best_enemy = enemy
-        if best_enemy is None:
-            command = Command(tank.index, 0, 0, False)
-            self.commands.append(command)
-        else:
-            self.move_to_position(tank, best_enemy.x, best_enemy.y)
-
-    def move_to_position(self, tank, target_x, target_y):
+    def move_to_position(self, tank, target_x, target_y, angle_mod, speed):
         """Set command to move to given coordinates."""
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
-        command = Command(tank.index, 1, 2 * relative_angle, True)
+        command = Command(tank.index, speed, 2 * relative_angle + angle_mod, False)
         self.commands.append(command)
+
+    def select_new_goal(self):
+        goal = [float(random.randint(-200, 200)), float(random.randint(-200, 200)), False]
+        print goal
+        return goal
+
+    def dist(self, x1, y1, x2, y2):
+        dist_result = math.sqrt((float(x1) - float(x2))**2 + (float(y1) - float(y2))**2)
+        return dist_result
 
     def normalize_angle(self, angle):
         """Make any angle be between +/- pi."""

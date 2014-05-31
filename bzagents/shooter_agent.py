@@ -35,7 +35,7 @@ class Agent(object):
         self.commands = []
 
         #positioning and tuning parameters
-        self.shooting_spot_x = -155
+        self.shooting_spot_x = -150
         self.shooting_spot_y = 0
         self.goal_sphere = 20
 

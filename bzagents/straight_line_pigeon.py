@@ -90,7 +90,7 @@ class Agent(object):
         target_angle = math.atan2(target_y - tank.y,
                                   target_x - tank.x)
         relative_angle = self.normalize_angle(target_angle - tank.angle)
-        command = Command(tank.index, 1, 2 * relative_angle, True)
+        command = Command(tank.index, 1, 2 * relative_angle, False)
         self.commands.append(command)
 
     def dist(self, x1, y1, x2, y2):
