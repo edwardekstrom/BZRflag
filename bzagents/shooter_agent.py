@@ -225,9 +225,19 @@ class Agent(object):
             self.updateKalmanFilter(z_tPlus1)
 
             est = self.H.dot(self.mu)
-            estPos = (int(est[0][0]), int(est[1][0]))
 
-            self.updates.append((estPos,self.sigmaT))
+            self.updates.append(((int(est[0][0]), int(est[1][0])),self.sigmaT))
+            aimAngle,distance = self.take_aim((agentTank.x,agentTank.y), agentTank.angle)
+            command = Command(0,0,aimAngle*2,True)
+            if aimAngle < 1 and aimAngle > -1:
+                if distance < 350:
+                    command = Command(0,0,aimAngle*2,True)
+                else:
+                    command = Command(0,0,aimAngle*2,False)
+            else:
+                command = Command(0,0,aimAngle*2,False)
+            self.commands.append(command)
+            self.bzrc.do_commands(self.commands)
         else:
             resetArrays()
 
@@ -239,6 +249,46 @@ class Agent(object):
         # self.doTank(self.mytanks[1])
         
         # in the rare case that a tank runs into its own bullet, don't do anything while it is dead
+
+    def take_aim(self, tankPosition, tankAngle):
+        xPos = self.mu[0][0]
+        xVel = self.mu[1][0]
+        xAcc = self.mu[2][0]
+        yPos = self.mu[3][0]
+        yVel = self.mu[4][0]
+        yAcc = self.mu[5][0]
+
+        tankX, tankY = tankPosition
+
+        velocity = math.sqrt(xVel**2 + yVel**2)
+        acceleration = math.sqrt(xAcc**2 + yAcc**2)
+
+        distance = math.sqrt((tankX - xPos)**2 + (tankY - yPos)**2)
+
+        timeToEnemy = 0
+        if acceleration!=0:
+            r = (100-velocity)**2 - 4*(acceleration/2)*distance*-1
+            if r>0:
+                plusRoot = (-(100-velocity) + math.sqrt(r)) / acceleration
+                minusRoot = (-(100-velocity) - math.sqrt(r)) / acceleration
+                if plusRoot > minusRoot:
+                    timeToEnemy = plusRoot
+                else:
+                    timeToEnemy = minusRoot
+            else:
+                timeToEnemy = 0
+        else:
+            timeToEnemy = distance/(100-velocity)
+
+        projectedX = xPos + xVel*timeToEnemy + xAcc*timeToEnemy**2/2
+        projectedY = yPos + yVel*timeToEnemy + yAcc*timeToEnemy**2/2
+        # print 'projX = ' + str(projectedX) + ', projY = ' + str(projectedY)
+
+        distance = math.sqrt((tankX - projectedX)**2 + (tankY - projectedY)**2)
+        angel = math.atan2(projectedY - tankY, projectedX - tankX)
+        return (self.normalize_angle(angel - tankAngle), distance)
+        
+
 
     def updateKalmanFilter(self, z_tPlus1):
         fTranspose = self.F.transpose()

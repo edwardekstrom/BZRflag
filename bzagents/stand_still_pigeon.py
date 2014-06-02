@@ -37,8 +37,8 @@ class Agent(object):
         # tuning and placement parameters
         #self.waiting_spot_x = -100
         #self.waiting_spot_y = 200
-        self.waiting_spot_x = 300
-        self.waiting_spot_y = 300
+        self.waiting_spot_x = 0
+        self.waiting_spot_y = 0
         self.goal_sphere = 20
 
     def tick(self, time_diff):
