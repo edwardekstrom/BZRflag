@@ -57,13 +57,13 @@ class Agent(object):
             speed = 1.0
             angle_mod = 0.0
 
-            if(tank.status == 'dead'):
-                print "dead"
+            # if(tank.status == 'dead'):
+            #     print "dead"
 
             # find new goal if stuck
             if(tank.status != 'dead' and self.prev_x == tank.x and self.prev_y == tank.y):
                 self.stuck_ticks += 1
-                print "stuck %d" % self.stuck_ticks
+                # print "stuck %d" % self.stuck_ticks
                 if(self.stuck_ticks > self.stuck_tolerance):
                     self.stuck_ticks = 0
                     self.goal = self.select_new_goal()
@@ -100,7 +100,7 @@ class Agent(object):
 
     def select_new_goal(self):
         goal = [float(random.randint(-200, 200)), float(random.randint(-200, 200)), False]
-        print goal
+        # print goal
         return goal
 
     def dist(self, x1, y1, x2, y2):

@@ -32,45 +32,45 @@ from grid import Grid
 import numpy
 from numpy import *
 from numpy.linalg import *
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-from OpenGL.GL import *
-from OpenGL.GLUT import *
-from OpenGL.GLU import *
+# import OpenGL
+# OpenGL.ERROR_CHECKING = False
+# from OpenGL.GL import *
+# from OpenGL.GLUT import *
+# from OpenGL.GLU import *
 from numpy import zeros
 
 
 grid = None
 
-def draw_grid():
-    # This assumes you are using a numpy array for your grid
-    width, height = grid.shape
-    glRasterPos2f(-1, -1)
-    glDrawPixels(width, height, GL_LUMINANCE, GL_FLOAT, grid)
-    glFlush()
-    glutSwapBuffers()
+# def draw_grid():
+#     # This assumes you are using a numpy array for your grid
+#     width, height = grid.shape
+#     glRasterPos2f(-1, -1)
+#     glDrawPixels(width, height, GL_LUMINANCE, GL_FLOAT, grid)
+#     glFlush()
+#     glutSwapBuffers()
 
-def update_grid(new_grid):
-    global grid
-    grid = new_grid
+# def update_grid(new_grid):
+#     global grid
+#     grid = new_grid
 
 
 
-def init_window(width, height):
-    global window
-    global grid
-    grid = zeros((width, height))
-    glutInit(())
-    glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH)
-    glutInitWindowSize(width, height)
-    glutInitWindowPosition(0, 0)
-    window = glutCreateWindow("Grid filter")
-    glutDisplayFunc(draw_grid)
-    glMatrixMode(GL_PROJECTION)
-    glLoadIdentity()
-    glMatrixMode(GL_MODELVIEW)
-    glLoadIdentity()
-    #glutMainLoop()
+# def init_window(width, height):
+#     global window
+#     global grid
+#     grid = zeros((width, height))
+#     glutInit(())
+#     glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_ALPHA | GLUT_DEPTH)
+#     glutInitWindowSize(width, height)
+#     glutInitWindowPosition(0, 0)
+#     window = glutCreateWindow("Grid filter")
+#     glutDisplayFunc(draw_grid)
+#     glMatrixMode(GL_PROJECTION)
+#     glLoadIdentity()
+#     glMatrixMode(GL_MODELVIEW)
+#     glLoadIdentity()
+#     #glutMainLoop()
 
 class Agent(object):
     """Class handles all command and control logic for a teams tanks."""
@@ -106,10 +106,12 @@ class Agent(object):
         # x,y = pos
         # print x
         # print y
-        self.grid = Grid(int(self.constants['worldsize']),
-            int(self.constants['worldsize']),
-            self.initialGridConstant,
-            self.initialGridConstant)
+        
+        # self.grid = Grid(int(self.constants['worldsize']),
+        #     int(self.constants['worldsize']),
+        #     self.initialGridConstant,
+        #     self.initialGridConstant)
+
         # self.grid.init_window(int(self.constants['worldsize']),int(self.constants['worldsize']))
         # for g in grid:
         #     print g
@@ -239,7 +241,7 @@ class Agent(object):
             self.commands.append(command)
             self.bzrc.do_commands(self.commands)
         else:
-            resetArrays()
+            self.resetArrays()
 
 
 
@@ -482,7 +484,7 @@ def main():
 
     agent = Agent(bzrc)
 
-    init_window(int(agent.constants['worldsize']),int(agent.constants['worldsize']))
+    # init_window(int(agent.constants['worldsize']),int(agent.constants['worldsize']))
     # print 'init complete'
     prev_time = time.time()
 
@@ -495,12 +497,12 @@ def main():
             time_diff = t - prev_time
             prev_time = t
             agent.tick(time_diff)
-            agent.doUpdate()
-            if(tic == 10):
-                update_grid(numpy.array(zip(*agent.grid.grid)))
-                draw_grid()
-                tic = 0
-            tic+=1
+            # agent.doUpdate()
+            # if(tic == 10):
+            #     update_grid(numpy.array(zip(*agent.grid.grid)))
+            #     draw_grid()
+            #     tic = 0
+            # tic+=1
     except KeyboardInterrupt:
         print "Exiting due to keyboard interrupt."
         bzrc.close()
