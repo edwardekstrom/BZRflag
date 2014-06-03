@@ -239,7 +239,7 @@ class Agent(object):
             self.commands.append(command)
             self.bzrc.do_commands(self.commands)
         else:
-            resetArrays()
+            self.resetArrays()
 
 
 
