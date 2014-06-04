@@ -1,12 +1,7 @@
 #grid class and gridsquare class
 import numpy
 from numpy import zeros
-import OpenGL
-OpenGL.ERROR_CHECKING = False
-from OpenGL.GL import *
-from OpenGL.GLUT import *
-from OpenGL.GLU import *
-from numpy import zeros
+import math
 
 class Grid:
 	def __init__(self, width, height,truePos,trueNeg):
@@ -17,7 +12,7 @@ class Grid:
 		# print self.truePos
 		# print self.trueNeg
 		# print self.grid
-		self.grid.fill(.5)
+		self.grid.fill(0)
 		# print self.grid
 		
 		# for x in grid:
@@ -30,25 +25,33 @@ class Grid:
 		x0,y0 = pos
 		x0+=self.dimensions[0]/2
 		y0+=self.dimensions[1]/2
-
 		self.grid[x0][y0] = 1
-		
-		# x = x0
-		# y = y0
 
-		# for col in miniGrid:
-		# 	for row in col:
-		# 		prior = self.grid[x][y]
+		xVariance = sigmaT[0][0]
+		yVariance = sigmaT[3][3]
+		original = xVariance
+		oneTenth = xVariance/10
+		shading = .1
+		while xVariance > 0:
+			for i in xrange(360):
+				cosine = int(x0+math.cos(i*math.pi/180)*xVariance)
+				sine = int(y0+math.sin(i*math.pi/180)*yVariance)
+				if self.inGrid((cosine, sine)):
+					self.grid[cosine][sine] = shading
+			shading+=.1
+			xVariance-=oneTenth
+			yVariance-=oneTenth
 
-		# 		if row == 1:
-		# 			occupied = self.truePos * prior
-		# 			unoccupied = (1 - self.trueNeg) * (1 - prior)
-		# 		else:
-		# 			occupied = (1 - self.truePos) * prior
-		# 			unoccupied = self.trueNeg * (1 - prior)
-				
-		# 		self.grid[x][y] = occupied / (occupied + unoccupied)
-
-		# 		y+=1
-		# 	y=y0
-		# 	x+=1
+	def inGrid(self, pos):
+		x,y = pos
+		isIn = True
+		if x < 0:
+			return False
+		elif x > self.dimensions[0]:
+			return False
+		elif y < 0:
+			return False
+		elif y > self.dimensions[1]:
+			return False
+		else:
+			return True
