@@ -27,7 +27,7 @@ import random
 
 from bzrc import BZRC, Command
 from pFields import PField
-from grid import Grid
+from gridMapping import Grid
 
 import numpy
 from numpy import *
