@@ -6,14 +6,14 @@ from numpy.linalg import *
 class Kalman:
 
     def __init__(self):
-        self.resetArrays()
+        self.resetArrays(0,0)
 
-    def resetArrays(self):
+    def resetArrays(self, target_x, target_y):
     # mean of the other tanks initial start position
-        self.mu = array([[0],
+        self.mu = array([[target_x],
                          [0],
                          [0],
-                         [200],
+                         [target_y],
                          [0],
                          [0]])
 

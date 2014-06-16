@@ -39,6 +39,9 @@ from OpenGL.GLU import *
 from numpy import zeros
 
 
+global tic
+tic = 0
+
 grid = None
 
 def draw_grid():
@@ -74,7 +77,9 @@ def init_window(width, height):
 class MAgent(object):
     """Class handles all command and control logic for a teams tanks."""
 
-    def __init__(self, bzrc):
+    def __init__(self, bzrc, tank_index):
+        #print tank_index
+        self.agent_index = tank_index
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
@@ -172,8 +177,9 @@ class MAgent(object):
         self.othertanks = self.bzrc.get_othertanks()
         
         self.commands = []
-        for tank in self.mytanks:
-            self.doTank(tank)
+        #for tank in self.mytanks:
+        tank = self.mytanks[self.agent_index]
+        self.doTank(tank)
         # self.doTank(self.mytanks[0])
         # self.doTank(self.mytanks[1])
         

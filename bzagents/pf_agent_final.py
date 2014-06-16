@@ -30,7 +30,9 @@ from pFields import PField
 class PFAgent(object):
     """Class handles all command and control logic for a teams tanks."""
 
-    def __init__(self, bzrc):
+    def __init__(self, bzrc, tank_index):
+        #print tank_index
+        self.agent_index = tank_index
         self.bzrc = bzrc
         self.constants = self.bzrc.get_constants()
         self.commands = []
@@ -38,31 +40,25 @@ class PFAgent(object):
         self.flag_sphere = 400
         self.obstacle_sphere = 1000
         self.enemy_sphere = 100
-        self.obstacles = bzrc.get_obstacles()
+#        self.obstacles = bzrc.get_obstacles()
         self.obstacle_centers = []
-        for ob in self.obstacles:
-            totalX = 0
-            totalY = 0
-            for corner in ob:
-                totalX += corner[0]
-                totalY += corner[1]
-            averageX = totalX / len(ob)
-            averageY = totalY / len(ob)
-            for corner in ob:
-                if self.dist(averageX,averageY,corner[0],corner[1]) > self.obstacle_sphere:
-                    self.obstacle_sphere = self.dist(averageX,averageY,corner[0],corner[1])
-                    # print self.obstacle_sphere
-            tup = (averageX,averageY)
-            self.obstacle_centers.append(tup)
-        # print ""
-        # for o in self.bzrc.get_obstacles():
-        #     print o
-        # print ""
-
+#        for ob in self.obstacles:
+#            totalX = 0
+#            totalY = 0
+#            for corner in ob:
+#                totalX += corner[0]
+#                totalY += corner[1]
+#            averageX = totalX / len(ob)
+#            averageY = totalY / len(ob)
+#            for corner in ob:
+#                if self.dist(averageX,averageY,corner[0],corner[1]) > self.obstacle_sphere:
+#                    self.obstacle_sphere = self.dist(averageX,averageY,corner[0],corner[1])
+#                    # print self.obstacle_sphere
+#            tup = (averageX,averageY)
+#            self.obstacle_centers.append(tup)
 
     def tick(self, time_diff):
         """Some time has passed; decide what to do next."""
-        # print 
         mytanks, othertanks, flags, shots = self.bzrc.get_lots_o_stuff()
         self.mytanks = mytanks
         self.othertanks = othertanks
@@ -75,30 +71,31 @@ class PFAgent(object):
 
 
 
-        for tank in mytanks:
-            if tank.status != 'dead':
-                pfo = None
-                obstacle_x, obstacle_y, d = self.closest_obstacle(tank)
-                if d < self.obstacle_sphere:
-                    # print str(d)
-                    pfo = PField(obstacle_x, obstacle_y, 0, self.obstacle_sphere, 'tangent')
+        #for tank in mytanks:
+        tank = self.mytanks[self.agent_index]
+        if tank.status != 'dead':
+            pfo = None
+            obstacle_x, obstacle_y, d = self.closest_obstacle(tank)
+            if d < self.obstacle_sphere:
+                # print str(d)
+                pfo = PField(obstacle_x, obstacle_y, 0, self.obstacle_sphere, 'tangent')
 
-                pfe = None
-                enemy_x, enemy_y, enemy_dist = self.closest_enemy(tank, self.enemies)
-                if enemy_dist < self.enemy_sphere:
-                    #print enemy_dist
-                    pfe = PField(enemy_x, enemy_y, 0, self.enemy_sphere, 'repel')
+            pfe = None
+            enemy_x, enemy_y, enemy_dist = self.closest_enemy(tank, self.enemies)
+            if enemy_dist < self.enemy_sphere:
+                #print enemy_dist
+                pfe = PField(enemy_x, enemy_y, 0, self.enemy_sphere, 'repel')
 
-                # if flag possession, then put a pf on the home_base
-                pf = None
-                if(tank.flag == '-'):
-                    best_flag = self.choose_best_flag(tank)
-                    pf = PField(best_flag.x, best_flag.y, 0, self.flag_sphere, 'attract')
-                # if not possessed, then put a pf on a flag
-                else:
-                    home_base_x, home_base_y = self.find_home_base(tank)
-                    pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
-                self.pf_move(tank, pf, pfo, pfe)
+            # if flag possession, then put a pf on the home_base
+            pf = None
+            if(tank.flag == '-'):
+                best_flag = self.choose_best_flag(tank)
+                pf = PField(best_flag.x, best_flag.y, 0, self.flag_sphere, 'attract')
+            # if not possessed, then put a pf on a flag
+            else:
+                home_base_x, home_base_y = self.find_home_base(tank)
+                pf = PField(home_base_x, home_base_y, 0, self.flag_sphere, 'attract')
+            self.pf_move(tank, pf, pfo, pfe)
 
         #for tank in mytanks:
             #self.attack_enemies(tank)

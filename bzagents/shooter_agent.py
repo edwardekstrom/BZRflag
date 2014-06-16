@@ -73,7 +73,7 @@ def init_window(width, height):
     glLoadIdentity()
     #glutMainLoop()
 
-class Agent(object):
+class KAgent(object):
     """Class handles all command and control logic for a teams tanks."""
     initialGridConstant = 0
 
@@ -218,7 +218,7 @@ def main():
     bzrc = BZRC(host, int(port))
 
 
-    agent = Agent(bzrc)
+    agent = KAgent(bzrc)
 
     init_window(int(agent.constants['worldsize']),int(agent.constants['worldsize']))
     # print 'init complete'
@@ -252,3 +252,12 @@ if __name__ == '__main__':
     main()
 
 # vim: et sw=4 sts=4
+
+
+
+
+
+
+
+
+
