@@ -17,7 +17,9 @@
 --green-port=50101 \
 --purple-port=50102 \
 --blue-port=50103 $@ &
-
+# --green-tanks=0 \
+# --purple-tanks=0 \
+# --blue-tanks=1 \
 
 #General:
 
@@ -40,7 +42,7 @@
 
 sleep 2
 python bzagents/final_agent.py localhost 50100 & # red
-#python bzagents/straight_line_pigeon.py localhost 50101 & # green
-#python bzagents/final_agent.py localhost 50102 & # purple
-python bzagents/straight_line_pigeon.py localhost 50103 & # blue
+python bzagents/final_agent.py localhost 50101 & # green
+python bzagents/final_agent.py localhost 50102 & # purple
+python bzagents/final_agent.py localhost 50103 & # blue
 

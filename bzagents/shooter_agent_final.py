@@ -86,7 +86,7 @@ class KAgent(object):
 		self.constants = self.bzrc.get_constants()
 		
 		self.mytanks = self.bzrc.get_mytanks()
-		self.targetTank = self.closest_enemy(self.mytanks[self.agent_index], self.bzrc.get_othertanks())
+		self.targetTank,self.targ = self.closest_enemy(self.mytanks[self.agent_index], self.bzrc.get_othertanks())
 		self._kalman.resetArrays(self.targetTank.x, self.targetTank.y)
 		
 		# print self.constants
@@ -122,12 +122,13 @@ class KAgent(object):
 		self._kalman.setDT(time_diff)
 		self.mytanks = self.bzrc.get_mytanks()
 		# self.othertanks = self.bzrc.get_othertanks()
-		#targetTank = self.closest_enemy(self.mytanks[self.agent_index], self.bzrc.get_othertanks())
+		self.targetTank = self.bzrc.get_othertanks()[self.targ]
 		self.commands = []
 		if self.targetTank.status == 'alive':
 			self.lock_on(self.targetTank)
 		else:
-			self.targetTank = self.closest_enemy(self.mytanks[self.agent_index], self.bzrc.get_othertanks())
+			self.targetTank,self.targ = self.closest_enemy(self.mytanks[self.agent_index], self.bzrc.get_othertanks())
+			# self.targ = self.targetTank.index
 			self.aliveTime = time.time()
 			#stopMoving = Command(self.agent_index,0,0,False)
 			#self.commands.append(stopMoving)
@@ -136,6 +137,8 @@ class KAgent(object):
 
 	def lock_on(self, targetTank):
 		agentTank = self.mytanks[self.agent_index]
+		print str(targetTank.x) + ' ' + str(targetTank.y)
+		# print str(targetTank)
 		Zt = array([[targetTank.x],
 						  [targetTank.y]])
 		self._kalman.updateKalmanFilter(Zt)
@@ -147,10 +150,13 @@ class KAgent(object):
 		command = Command(0,0,aimAngle*2,True)
 		if aimAngle < 1 and aimAngle > -1:
 			if distance < 350:
+				# print 'shooting'
 				command = Command(self.agent_index,0,aimAngle*2,True)
 			else:
+				# print 'not shooting distance'
 				command = Command(self.agent_index,0,aimAngle*2,False)
 		else:
+			# print 'not shooting aimAngle'
 			command = Command(self.agent_index,0,aimAngle*2,False)
 		self.commands.append(command)
 		self.bzrc.do_commands(self.commands)
@@ -174,8 +180,11 @@ class KAgent(object):
 		r = (100-velocity)**2 - 4*(acceleration/2)*distance*-1
 		# I'm getting a division by zero error here with the acceleration variable,
 		#  probably because I reset the arrays to soon?
-		plusRoot = (-(100-velocity) + math.sqrt(r)) / acceleration
-		minusRoot = (-(100-velocity) - math.sqrt(r)) / acceleration
+		plusRoot = (-(100-velocity) + math.sqrt(r))
+		minusRoot = (-(100-velocity) - math.sqrt(r))
+		if acceleration != 0:
+			plusRoot/=acceleration
+			minusRoot/=acceleration
 		if plusRoot > minusRoot:
 			timeToEnemy = plusRoot
 		else:
@@ -195,15 +204,22 @@ class KAgent(object):
 		best_d = (2 * float(self.constants['worldsize']))**2
 
 		best_e = None
+		index = 0
+		i = 0
 		for e in enemies:
+			# print str(e.x)
+			# print str(e.y)
 			d = self.dist(e.x, e.y, tank.x, tank.y)
 			if d < best_d:
 				best_d = d
-#				closest_x = e.x
-#				closest_y = e.y
+				# closest_x = e.x
+				# closest_y = e.y
 				best_e = e
+				# print str(e)
+				index = i
+			i+=1
 
-		return (best_e)
+		return (best_e, index)
 
 	def doUpdate(self):
 		# print len(self.updates)

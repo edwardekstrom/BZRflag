@@ -39,7 +39,7 @@ class Agent(object):
         # self.start_spot_y = 200
         # self.end_spot_x = 0
         # self.end_spot_y = -200
-        self.goals = [[-300, 200, False], [-300, -200, False]]
+        self.goals = [[-300, 0, False], [-300, 0, False]]
         self.goal_sphere = 20
 
     def tick(self, time_diff):

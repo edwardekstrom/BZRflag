@@ -127,6 +127,7 @@ class KAgent(object):
             self._kalman.resetArrays()
 
     def lock_on(self, targetTank):
+        print str(targetTank.x)
         agentTank = self.mytanks[0]
         Zt = array([[targetTank.x],
                           [targetTank.y]])

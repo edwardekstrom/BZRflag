@@ -11,11 +11,11 @@ class Kalman:
     def resetArrays(self, target_x, target_y):
     # mean of the other tanks initial start position
         self.mu = array([[target_x],
-                         [0],
-                         [0],
+                         [0.00],
+                         [0.00],
                          [target_y],
-                         [0],
-                         [0]])
+                         [0.00],
+                         [0.00]])
 
         self.sigmaT = array([[90,0,0  ,0 ,0,0  ],
                              [0 ,1,0  ,0 ,0,0  ],
