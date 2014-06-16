@@ -137,7 +137,7 @@ class KAgent(object):
 
 	def lock_on(self, targetTank):
 		agentTank = self.mytanks[self.agent_index]
-		print str(targetTank.x) + ' ' + str(targetTank.y)
+		# print str(targetTank.x) + ' ' + str(targetTank.y)
 		# print str(targetTank)
 		Zt = array([[targetTank.x],
 						  [targetTank.y]])
