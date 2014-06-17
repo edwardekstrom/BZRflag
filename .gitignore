@@ -54,6 +54,7 @@ docs/_build/
 
 # Eddy and Spencer's ignored stuff
 bzagents/compiled/
+*.DS_Store
 
 *.pyc
 *.gpi
